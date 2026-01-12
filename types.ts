@@ -7,6 +7,7 @@ export enum PoliticalPosition {
 
 export enum UserRole {
   ADMIN = 'ADMIN',
+  MODERATOR = 'MODERATOR',
   USER = 'USER',
   GUEST = 'GUEST'
 }
@@ -18,7 +19,26 @@ export interface Proof {
   date: string;
   likes: number;
   dislikes: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EDITS_REQUIRED';
+  submittedBy?: string; // Анонімний ID користувача
+}
+
+export interface AuditLog {
+  id: string;
+  adminId: string;
+  adminName: string;
+  action: string;
+  targetId: string;
+  targetName: string;
+  timestamp: string;
+}
+
+export interface AIInsight {
+  id: string;
+  targetId: string;
+  confidence: number;
+  sentiment: 'NEGATIVE' | 'POSITIVE' | 'NEUTRAL';
+  summary: string;
 }
 
 export interface TimelineEvent {
@@ -48,6 +68,9 @@ export interface User {
   username: string;
   role: UserRole;
   avatar?: string;
+  email?: string;
+  createdAt?: string;
+  submissionsCount?: number;
 }
 
 export interface Stats {

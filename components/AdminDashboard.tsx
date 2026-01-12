@@ -1,88 +1,243 @@
 
-import React, { useState } from 'react';
-import { ShieldCheck, CheckCircle, XCircle, Users, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, CheckCircle, XCircle, Users, FileText, Activity, Brain, History, Edit3, Trash2, UserCircle, Mail, Calendar as CalendarIcon } from 'lucide-react';
 import { useAppContext } from '../store/AppContext';
+import { apiService } from '../services/apiService';
+import { AuditLog, AIInsight, User as UserType } from '../types';
+import { motion } from 'framer-motion';
 
 const AdminDashboard: React.FC = () => {
   const { people } = useAppContext();
-  const [activeTab, setActiveTab] = useState<'users' | 'proofs'>('proofs');
+  const [activeTab, setActiveTab] = useState<'proofs' | 'entities' | 'audit' | 'ai' | 'users'>('proofs');
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [insights, setInsights] = useState<AIInsight[]>([]);
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadAdminData = async () => {
+      setLoading(true);
+      if (activeTab === 'audit') {
+        const data = await apiService.fetchAuditLogs();
+        setLogs(data);
+      } else if (activeTab === 'ai') {
+        const data = await apiService.fetchAIInsights();
+        setInsights(data);
+      } else if (activeTab === 'users') {
+        const data = await apiService.fetchUsers();
+        setUsers(data);
+      }
+      setLoading(false);
+    };
+    loadAdminData();
+  }, [activeTab]);
 
   return (
-    <div className="glass rounded-[2rem] overflow-hidden border-white/5">
-      <div className="p-8 border-b border-white/5 bg-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="glass rounded-[2rem] overflow-hidden border-white/5"
+    >
+      <div className="p-8 border-b border-white/5 bg-white/5 flex flex-col xl:flex-row justify-between items-center gap-6">
         <h2 className="text-2xl font-black tracking-tighter uppercase flex items-center">
-          <ShieldCheck className="mr-3 text-emerald-500" size={24} /> Admin Terminal
+          <ShieldCheck className="mr-3 text-emerald-500" size={24} /> 
+          Система Керування
         </h2>
-        <div className="flex bg-zinc-900 p-1.5 rounded-2xl border border-white/5">
-          <button 
-            onClick={() => setActiveTab('proofs')}
-            className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'proofs' ? 'bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            <FileText size={14} className="inline mr-2" /> Moderation
-          </button>
-          <button 
-             onClick={() => setActiveTab('users')}
-             className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'users' ? 'bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20' : 'text-zinc-500 hover:text-zinc-300'}`}
-          >
-            <Users size={14} className="inline mr-2" /> Entities
-          </button>
+        <div className="flex bg-zinc-900 p-1.5 rounded-2xl border border-white/5 flex-wrap justify-center">
+          {[
+            { id: 'proofs', label: 'Черга', icon: FileText },
+            { id: 'entities', label: 'Особи', icon: Users },
+            { id: 'users', label: 'Користувачі', icon: UserCircle },
+            { id: 'audit', label: 'Аудит', icon: History },
+            { id: 'ai', label: 'Consilium', icon: Brain },
+          ].map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20' : 'text-zinc-500 hover:text-zinc-300'}`}
+            >
+              <tab.icon size={14} className="inline mr-2" /> {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="p-8">
-        {activeTab === 'proofs' ? (
-          <div className="space-y-4">
-            <div className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">Queue: 5 pending submissions</div>
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-zinc-900/40 p-6 rounded-2xl border border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center group hover:border-emerald-500/20 transition-all">
-                <div className="mb-6 md:mb-0">
-                  <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mb-1">Олександр Петров</p>
-                  <p className="text-base text-zinc-200 font-medium leading-relaxed max-w-md">"Був помічений на несанкціонованому ефірі, де підтримав..."</p>
-                  <p className="text-[9px] text-zinc-600 mt-3 font-bold uppercase tracking-widest italic">Source: External Link • 2h ago</p>
-                </div>
-                <div className="flex space-x-3 w-full md:w-auto">
-                  <button className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-emerald-500/10 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-zinc-950 transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500/20">
-                    <CheckCircle size={14} /> <span>Approve</span>
-                  </button>
-                  <button className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-red-500/20">
-                    <XCircle size={14} /> <span>Reject</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+      <div className="p-8 min-h-[500px]">
+        {loading ? (
+          <div className="flex items-center justify-center h-full min-h-[400px]">
+             <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-             <table className="w-full text-left border-collapse">
-               <thead>
-                 <tr className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5">
-                   <th className="pb-6 px-4">Entity Name</th>
-                   <th className="pb-6 px-4">Status</th>
-                   <th className="pb-6 px-4">Score</th>
-                   <th className="pb-6 px-4 text-right">Actions</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-white/5">
-                 {people.map(p => (
-                   <tr key={p.id} className="text-sm group hover:bg-white/5 transition-colors">
-                     <td className="py-5 px-4 font-black tracking-tight text-zinc-200">{p.name}</td>
-                     <td className="py-5 px-4">
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${p.position === 'BETRAYAL' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
-                          {p.position}
-                        </span>
-                     </td>
-                     <td className="py-5 px-4 font-black text-zinc-400">{p.score}</td>
-                     <td className="py-5 px-4 text-right">
-                       <button className="text-emerald-500 text-[10px] font-black uppercase tracking-widest hover:text-emerald-400 hover:underline transition-colors">Edit</button>
-                     </td>
-                   </tr>
+          <>
+            {activeTab === 'proofs' && (
+              <div className="space-y-4">
+                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">Черга модерації: 14 активних заявок</p>
+                {[
+                  { id: '1', target: 'Олександр Петров', text: 'Підтримка закликів до дестабілізації під час виступу на форумі...', source: 'youtube.com/watch?v=...', authorId: 'u-432', time: '4г тому' },
+                  { id: '2', target: 'Марія Патріотка', text: 'Верифікований звіт про передачу обладнання для 3-ї ОШБр.', source: 'facebook.com/posts/...', authorId: 'u-128', time: '2г тому' },
+                  { id: '3', target: 'Віктор Тихоня', text: 'Докази перебування на розважальних заходах у Дубаї під час обстрілів.', source: 'instagram.com/p/...', authorId: 'u-901', time: '1г тому' }
+                ].map(item => (
+                  <div key={item.id} className="bg-zinc-900/40 p-6 rounded-2xl border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center group hover:border-emerald-500/20 transition-all">
+                    <div className="mb-6 lg:mb-0">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Об'єкт: {item.target}</p>
+                        <span className="text-[9px] text-zinc-600 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">SUBMITTER: #{item.authorId}</span>
+                      </div>
+                      <p className="text-base text-zinc-200 font-medium leading-relaxed max-w-md">"{item.text}"</p>
+                      <p className="text-[9px] text-zinc-600 mt-3 font-bold uppercase tracking-widest italic">Джерело: {item.source} • {item.time}</p>
+                    </div>
+                    <div className="flex space-x-3 w-full lg:w-auto">
+                      <button className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-emerald-500/10 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-zinc-950 transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500/20">
+                        <CheckCircle size={14} /> <span>ЗАТВЕРДИТИ</span>
+                      </button>
+                      <button className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-red-500/20">
+                        <XCircle size={14} /> <span>ВІДХИЛИТИ</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'entities' && (
+              <div className="overflow-x-auto">
+                 <div className="flex justify-between items-center mb-6">
+                    <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em]">Реєстр публічних осіб</p>
+                    <button className="px-4 py-2 bg-emerald-500 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-widest">+ Додати особу</button>
+                 </div>
+                 <table className="w-full text-left border-collapse">
+                   <thead>
+                     <tr className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5">
+                       <th className="pb-6 px-4">Ім'я</th>
+                       <th className="pb-6 px-4">Категорія</th>
+                       <th className="pb-6 px-4">Позиція</th>
+                       <th className="pb-6 px-4 text-right">Дії</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-white/5">
+                     {people.map(p => (
+                       <tr key={p.id} className="text-sm group hover:bg-white/5 transition-colors">
+                         <td className="py-5 px-4 font-black tracking-tight text-zinc-200">{p.name}</td>
+                         <td className="py-5 px-4 text-zinc-500 font-bold uppercase text-[10px]">{p.category}</td>
+                         <td className="py-5 px-4">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${p.position === 'BETRAYAL' ? 'bg-red-500/10 text-red-500' : p.position === 'SUPPORT' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                              {p.position}
+                            </span>
+                         </td>
+                         <td className="py-5 px-4 text-right">
+                           <div className="flex justify-end space-x-2">
+                             <button className="p-2 text-zinc-500 hover:text-emerald-500"><Edit3 size={16} /></button>
+                             <button className="p-2 text-zinc-500 hover:text-red-500"><Trash2 size={16} /></button>
+                           </div>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+              </div>
+            )}
+
+            {activeTab === 'users' && (
+              <div className="overflow-x-auto">
+                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">База зареєстрованих користувачів</p>
+                 <table className="w-full text-left border-collapse">
+                   <thead>
+                     <tr className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5">
+                       <th className="pb-6 px-4">Користувач</th>
+                       <th className="pb-6 px-4">Роль</th>
+                       <th className="pb-6 px-4">E-mail</th>
+                       <th className="pb-6 px-4">Активність</th>
+                       <th className="pb-6 px-4 text-right">Реєстрація</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-white/5">
+                     {users.map(u => (
+                       <tr key={u.id} className="text-sm group hover:bg-white/5 transition-colors">
+                         <td className="py-5 px-4">
+                           <div className="flex items-center space-x-3">
+                             <img src={u.avatar} className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/10" />
+                             <div>
+                               <p className="font-black tracking-tight text-zinc-200">{u.username}</p>
+                               <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">ID: {u.id}</p>
+                             </div>
+                           </div>
+                         </td>
+                         <td className="py-5 px-4">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${u.role === 'ADMIN' ? 'bg-emerald-500/10 text-emerald-500' : u.role === 'MODERATOR' ? 'bg-blue-500/10 text-blue-400' : 'bg-zinc-800 text-zinc-400'}`}>
+                              {u.role}
+                            </span>
+                         </td>
+                         <td className="py-5 px-4 text-zinc-400 font-medium flex items-center space-x-2">
+                           <Mail size={12} className="text-zinc-600" />
+                           <span>{u.email}</span>
+                         </td>
+                         <td className="py-5 px-4">
+                           <div className="flex flex-col leading-none">
+                             <span className="text-emerald-500 font-black text-xs">{u.submissionsCount}</span>
+                             <span className="text-[9px] text-zinc-600 uppercase font-bold mt-1">сабмітів</span>
+                           </div>
+                         </td>
+                         <td className="py-5 px-4 text-right text-zinc-500 font-bold uppercase text-[10px]">
+                           <div className="flex items-center justify-end space-x-1.5">
+                             <CalendarIcon size={12} />
+                             <span>{u.createdAt}</span>
+                           </div>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+              </div>
+            )}
+
+            {activeTab === 'audit' && (
+              <div className="space-y-4">
+                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">Журнал дій адміністрації</p>
+                 {logs.map(log => (
+                   <div key={log.id} className="bg-zinc-900/20 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                     <div className="flex items-center space-x-4">
+                        <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500">
+                          <Activity size={16} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold"><span className="text-emerald-500">{log.adminName}</span> — {log.action}</p>
+                          <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-1">Ціль: {log.targetName}</p>
+                        </div>
+                     </div>
+                     <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{log.timestamp}</span>
+                   </div>
                  ))}
-               </tbody>
-             </table>
-          </div>
+              </div>
+            )}
+
+            {activeTab === 'ai' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="col-span-full mb-4">
+                   <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em]">Висновки AI-Консиліуму</p>
+                </div>
+                {insights.map(insight => (
+                  <div key={insight.id} className="glass p-6 rounded-3xl border-white/10 relative">
+                    <div className="absolute top-4 right-4 bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2 py-1 rounded-lg">
+                      Confidence: {(insight.confidence * 100).toFixed(0)}%
+                    </div>
+                    <div className="flex items-start space-x-4">
+                      <Brain size={24} className="text-purple-400 mt-1" />
+                      <div>
+                        <h4 className="font-black tracking-tight mb-2">Об'єкт: {people.find(p => p.id === insight.targetId)?.name}</h4>
+                        <p className="text-sm text-zinc-400 leading-relaxed italic">"{insight.summary}"</p>
+                        <div className={`mt-4 inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${insight.sentiment === 'NEGATIVE' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                           Тональність: {insight.sentiment}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
