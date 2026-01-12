@@ -10,28 +10,28 @@ const StatsBar: React.FC = () => {
   if (!stats) return null;
 
   const statItems = [
-    { label: 'Моніторинг', value: stats.totalMonitored, icon: Users, color: 'text-blue-400' },
+    { label: 'Моніторинг', value: stats.totalMonitored, icon: Users, color: 'text-zinc-400' },
     { label: 'Зашквар', value: stats.betrayalCount, icon: AlertTriangle, color: 'text-red-500' },
     { label: 'Патріоти', value: stats.supportCount, icon: ShieldCheck, color: 'text-emerald-500' },
-    { label: 'Активність за тиждень', value: stats.weeklyActivity, icon: Activity, color: 'text-amber-500' },
+    { label: 'Активність', value: stats.weeklyActivity, icon: Activity, color: 'text-emerald-400' },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
       {statItems.map((item, idx) => (
         <motion.div 
           key={item.label}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.1 }}
-          className="glass p-4 rounded-2xl flex items-center space-x-4"
+          transition={{ delay: idx * 0.05 }}
+          className="glass p-5 rounded-2xl flex items-center space-x-4 border border-white/5 hover:border-white/10 transition-colors"
         >
-          <div className={`p-3 rounded-xl bg-slate-900/50 ${item.color}`}>
-            <item.icon size={24} />
+          <div className={`p-2.5 rounded-lg bg-zinc-900/80 ${item.color}`}>
+            <item.icon size={20} />
           </div>
           <div>
-            <p className="text-slate-400 text-xs uppercase tracking-wider font-semibold">{item.label}</p>
-            <p className="text-2xl font-bold">{item.value}</p>
+            <p className="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-0.5">{item.label}</p>
+            <p className="text-2xl font-black tracking-tighter leading-none">{item.value}</p>
           </div>
         </motion.div>
       ))}
