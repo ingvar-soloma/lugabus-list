@@ -7,8 +7,11 @@ import StatsBar from './components/StatsBar';
 import PersonCard from './components/PersonCard';
 import PersonModal from './components/PersonModal';
 import AdminDashboard from './components/AdminDashboard';
+import AuthModal from './components/AuthModal';
+import AddFigureModal from './components/AddFigureModal';
 import { CATEGORIES } from './constants';
 import { Person, UserRole } from './types';
+import { Plus } from 'lucide-react';
 
 // Page Components
 const MethodologyPage = () => (
@@ -50,10 +53,12 @@ const ContactPage = () => (
 );
 
 const LugaBusContent: React.FC = () => {
-  const { user, people, loading, login, logout } = useAppContext();
+  const { user, people, loading, logout } = useAppContext();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Всі');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  const [isAddFigureModalOpen, setIsAddFigureModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState<'home' | 'methodology' | 'contact' | 'admin'>('home');
 
   const filteredPeople = useMemo(() => {
@@ -106,19 +111,26 @@ const LugaBusContent: React.FC = () => {
                 <p className="text-xs font-black tracking-tight">{user.username}</p>
                 <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">{user.role}</p>
               </div>
-              <img src={user.avatar} className="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20" />
+              <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`} className="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20" />
               <button onClick={logout} className="p-2 text-zinc-600 hover:text-red-500 transition-colors">
                 <LogOut size={18} />
               </button>
             </div>
           ) : (
-            <button 
-              onClick={login}
-              className="flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 px-6 py-2.5 rounded-xl font-black tracking-tight transition-all shadow-lg shadow-emerald-500/20 uppercase text-xs active:scale-95"
-            >
-              <LogIn size={16} />
-              <span>Вхід</span>
-            </button>
+            <div className="scale-90 origin-right">
+               <button 
+                 onClick={() => setIsAuthModalOpen(true)}
+                 className="flex items-center px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-emerald-500/30 transition-all group"
+               >
+                 <div className="bg-emerald-500/10 p-2 rounded-lg mr-3 group-hover:bg-emerald-500 group-hover:text-zinc-950 transition-colors text-emerald-500">
+                    <LogIn size={18} />
+                 </div>
+                 <div className="text-left">
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold group-hover:text-zinc-400">Кабінет</p>
+                    <p className="text-xs font-black text-white group-hover:text-emerald-500 transition-colors">Вхід / Реєстрація</p>
+                 </div>
+               </button>
+            </div>
           )}
         </div>
       </nav>
@@ -145,7 +157,15 @@ const LugaBusContent: React.FC = () => {
                     className="w-full glass bg-zinc-900/40 py-4 pl-14 pr-6 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all font-black uppercase text-[11px] tracking-widest"
                   />
                 </div>
-                <div className="flex space-x-2 overflow-x-auto pb-4 lg:pb-0 no-scrollbar items-center">
+                <div className="flex flex-col sm:flex-row space-x-0 sm:space-x-2 space-y-2 sm:space-y-0 overflow-x-auto pb-4 lg:pb-0 no-scrollbar items-center">
+                  {user && (
+                    <button
+                      onClick={() => setIsAddFigureModalOpen(true)}
+                      className="px-6 py-3.5 rounded-full text-[10px] font-black tracking-[0.2em] uppercase whitespace-nowrap transition-all border h-full flex items-center bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-zinc-950"
+                    >
+                      <Plus size={14} className="mr-2" /> Додати особу
+                    </button>
+                  )}
                   {CATEGORIES.map(cat => (
                     <button
                       key={cat}
@@ -185,13 +205,25 @@ const LugaBusContent: React.FC = () => {
 
       {/* Detail Modal Container */}
       <PersonModal person={selectedPerson} onClose={() => setSelectedPerson(null)} />
+      <AddFigureModal 
+        isOpen={isAddFigureModalOpen} 
+        onClose={() => setIsAddFigureModalOpen(false)} 
+        onSuccess={() => {
+          // Could refresh data here if needed, but since it goes to PENDING it won't show up anyway
+          alert('Дані надіслано на перевірку!');
+        }} 
+      />
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
 
       {/* Global Footer */}
       <footer className="max-w-7xl mx-auto px-6 mt-32 py-10 border-t border-white/5">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center space-x-2">
             <div className="bg-zinc-800 w-8 h-8 flex items-center justify-center rounded-lg text-emerald-500 font-black text-xs">LB</div>
-            <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">© 2024 LugaBus Project.ua</p>
+            <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">© 2026 LugaBus Project.ua</p>
           </div>
           <div className="flex space-x-8 text-[10px] font-black uppercase tracking-widest text-zinc-600">
             <button onClick={() => setCurrentPage('methodology')} className="hover:text-emerald-500 transition-colors">Правила</button>

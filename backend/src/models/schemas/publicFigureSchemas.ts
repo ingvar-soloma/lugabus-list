@@ -13,3 +13,12 @@ export const getPublicFigureByIdSchema = z.object({
     id: z.string().uuid(),
   }),
 });
+
+export const createPublicFigureSchema = z.object({
+  body: z.object({
+    name: z.string().min(2),
+    role: z.string().min(2),
+    statement: z.string().min(5),
+    rating: z.number().int().optional(),
+  }),
+});

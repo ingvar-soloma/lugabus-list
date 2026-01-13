@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { PublicFigureController } from '../controllers/publicFigureController';
 import { validate } from '../middlewares/validate';
-import { getPublicFiguresSchema, getPublicFigureByIdSchema } from '../models/schemas/publicFigureSchemas';
+import { getPublicFiguresSchema, getPublicFigureByIdSchema, createPublicFigureSchema } from '../models/schemas/publicFigureSchemas';
+import { authMiddleware } from '../middlewares/authMiddleware';
 
 const router = Router();
 const controller = new PublicFigureController();
@@ -16,6 +17,51 @@ const controller = new PublicFigureController();
  *         description: A list of public figures.
  */
 router.get('/', validate(getPublicFiguresSchema), controller.getAll);
+
+/**
+ * @swagger
+ * /figures:
+ *   post:
+ *     summary: Create a new public figure
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - role
+ *               - statement
+ *             properties:
+ *               name:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *               statement:
+ *                 type: string
+ *               rating:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Created
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/', authMiddleware, validate(createPublicFigureSchema), controller.create);
+
+/**
+ * @swagger
+ * /figures/stats:
+ *   get:
+ *     summary: Retrieve statistics for public figures
+ *     responses:
+ *       200:
+ *         description: Statistics object.
+ */
+router.get('/stats', controller.getStats);
 
 /**
  * @swagger

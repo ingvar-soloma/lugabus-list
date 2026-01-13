@@ -26,4 +26,22 @@ export class PublicFigureController {
       next(error);
     }
   };
+
+  getStats = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const stats = await this.service.getStats();
+      res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  create = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const figure = await this.service.create(req.body);
+      res.status(201).json(figure);
+    } catch (error) {
+      next(error);
+    }
+  };
 }

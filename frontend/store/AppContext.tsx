@@ -37,17 +37,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const login = async () => {
-    const userData = await apiService.login();
-    setUser(userData);
+  const login = async (telegramData: any) => {
+    try {
+      const userData = await apiService.handleTelegramLogin(telegramData);
+      setUser(userData);
+    } catch (error) {
+      console.error("Login failed", error);
+    }
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
     setUser(null);
   };
 
   useEffect(() => {
-    refreshData();
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const userData = await apiService.getMe();
+          setUser(userData);
+        } catch (e) {
+          localStorage.removeItem('token');
+        }
+      }
+      refreshData();
+    };
+    initAuth();
   }, []);
 
   return (

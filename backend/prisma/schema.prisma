@@ -37,9 +37,30 @@ model AuditLog {
   action    String
   timestamp DateTime @default(now())
   userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
   details   Json?
   proofId   String?  @unique
   proof     Proof?   @relation(fields: [proofId], references: [id])
+}
+
+model User {
+  id          String   @id @default(uuid())
+  telegramId  BigInt?   @unique
+  username    String?   @unique
+  password    String?
+  firstName   String?
+  lastName    String?
+  photoUrl    String?
+  role        UserRole @default(USER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  auditLogs   AuditLog[]
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
 }
 
 model Admin {

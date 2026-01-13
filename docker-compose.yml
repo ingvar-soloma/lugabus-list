@@ -1,20 +1,32 @@
 services:
   frontend:
-    build:
-      context: ./frontend
+    image: node:22
+    working_dir: /app
     ports:
-      - "3000:80"
-    restart: always
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev"
+    environment:
+      VITE_TELEGRAM_BOT_NAME: ${VITE_TELEGRAM_BOT_NAME}
     networks:
       - lugabus-net
 
   backend:
-    build:
-      context: ./backend
+    image: node:22
+    working_dir: /app
     ports:
       - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npx prisma generate && npm run dev"
     environment:
       DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      CORS_ORIGIN: ${CORS_ORIGIN}
     depends_on:
       - db
     restart: always

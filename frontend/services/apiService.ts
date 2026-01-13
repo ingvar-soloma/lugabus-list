@@ -1,57 +1,146 @@
+import { Person, Stats, User, AuditLog, AIInsight } from '../types';
 
-import { MOCK_PEOPLE, MOCK_USER, MOCK_ADMIN_USERS } from '../constants';
-import { Person, Stats, User, PoliticalPosition, Proof, AuditLog, AIInsight } from '../types';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const API_BASE_URL = '/api';
 
 class ApiService {
-  async fetchPeople(): Promise<Person[]> {
-    await delay(400);
-    return [...MOCK_PEOPLE];
-  }
-
-  async fetchUsers(): Promise<User[]> {
-    await delay(300);
-    return [...MOCK_ADMIN_USERS];
-  }
-
-  async getStats(): Promise<Stats> {
-    await delay(200);
-    const people = MOCK_PEOPLE;
+  private getHeaders() {
+    const token = localStorage.getItem('token');
     return {
-      totalMonitored: people.length,
-      betrayalCount: people.filter(p => p.position === PoliticalPosition.BETRAYAL).length,
-      supportCount: people.filter(p => p.position === PoliticalPosition.SUPPORT).length,
-      pendingProofs: 14,
-      weeklyActivity: 124
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     };
   }
 
-  async login(): Promise<User> {
-    await delay(500);
-    return MOCK_USER;
+  async fetchPeople(): Promise<Person[]> {
+    const response = await fetch(`${API_BASE_URL}/figures`);
+    if (!response.ok) throw new Error('Failed to fetch people');
+    return response.json();
+  }
+
+  async createFigure(data: { name: string; role: string; statement: string; rating?: number }): Promise<Person> {
+    const response = await fetch(`${API_BASE_URL}/figures`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!response.ok) throw new Error('Failed to create figure');
+    return response.json();
+  }
+
+  async fetchUsers(): Promise<User[]> {
+    const response = await fetch(`${API_BASE_URL}/admin/users`, {
+        headers: this.getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch users');
+    return response.json();
+  }
+
+  async getStats(): Promise<Stats> {
+    const response = await fetch(`${API_BASE_URL}/figures/stats`);
+    if (!response.ok) throw new Error('Failed to fetch stats');
+    return response.json();
+  }
+
+  async register(data: { username: string; password?: string; firstName?: string; lastName?: string }): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Registration failed');
+    }
+    
+    const { token } = await response.json();
+    localStorage.setItem('token', token);
+    
+    return this.getMe();
+  }
+
+  async login(data: { username: string; password?: string }): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (!response.ok) {
+         const errorData = await response.json();
+         throw new Error(errorData.message || 'Login failed');
+    }
+    
+    const { token } = await response.json();
+    localStorage.setItem('token', token);
+    
+    return this.getMe();
+  }
+
+  async handleTelegramLogin(data: any): Promise<User> {
+    const response = await fetch(`${API_BASE_URL}/auth/telegram`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    if (!response.ok) throw new Error('Login failed');
+    
+    const { token } = await response.json();
+    localStorage.setItem('token', token);
+    
+    // Decode token or fetch user profile
+    return this.getMe();
+  }
+
+  async getMe(): Promise<User> {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error('No token');
+    
+    // Robust JWT decoding that handles Base64Url
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        const payload = JSON.parse(jsonPayload);
+        return {
+            id: payload.id,
+            username: payload.username,
+            role: payload.role,
+            avatar: payload.avatar
+        };
+    } catch (e) {
+        console.error('Failed to decode token', e);
+        throw e;
+    }
   }
 
   async fetchAuditLogs(): Promise<AuditLog[]> {
-    await delay(300);
-    return [
-      { id: 'l1', adminId: 'u-1', adminName: 'Admin_User', action: 'Зміна статусу', targetId: '1', targetName: 'Олександр Петров', timestamp: '2024-05-20 14:30' },
-      { id: 'l2', adminId: 'u-1', adminName: 'Admin_User', action: 'Додавання пруфу', targetId: '2', targetName: 'Марія Патріотка', timestamp: '2024-05-20 12:15' },
-    ];
+    const response = await fetch(`${API_BASE_URL}/admin/logs`, {
+        headers: this.getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch logs');
+    return response.json();
   }
 
   async fetchAIInsights(): Promise<AIInsight[]> {
-    await delay(400);
-    return [
-      { id: 'ai1', targetId: '1', confidence: 0.89, sentiment: 'NEGATIVE', summary: 'Виявлено високий рівень маніпулятивних наративів у останній заяві.' },
-      { id: 'ai2', targetId: '2', confidence: 0.95, sentiment: 'POSITIVE', summary: 'Діяльність повністю відповідає критеріям патріотичної позиції.' },
-    ];
+    const response = await fetch(`${API_BASE_URL}/admin/ai-insights`, {
+        headers: this.getHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch AI insights');
+    return response.json();
   }
 
   async voteProof(proofId: string, type: 'like' | 'dislike'): Promise<boolean> {
-    await delay(100);
-    console.log(`Voted ${type} for proof ${proofId}`);
-    return true;
+    const response = await fetch(`${API_BASE_URL}/proofs/${proofId}/vote`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ type })
+    });
+    return response.ok;
   }
 }
 

@@ -26,4 +26,17 @@ export class PublicFigureService extends BaseService {
   async getById(id: string) {
     return this.repository.getById(id);
   }
+
+  async create(data: Prisma.PublicFigureCreateInput) {
+    // Explicitly set status to PENDING for user submissions
+    // Admin submissions could be APPROVED automatically, but for now, everything is PENDING
+    return this.repository.create({
+      ...data,
+      status: 'PENDING',
+    });
+  }
+
+  async getStats() {
+    return this.repository.getStats();
+  }
 }
