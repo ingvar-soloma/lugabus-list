@@ -1,7 +1,5 @@
 {
   "name": "LugaBus.ua структурований",
   "description": "Platform for monitoring the political position of public figures with a focus on transparency and public control.",
-  "requestFramePermissions": [
-    "camera"
-  ]
+  "requestFramePermissions": []
 }
