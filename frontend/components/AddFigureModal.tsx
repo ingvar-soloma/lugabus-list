@@ -66,7 +66,7 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Надіслати на розгляд модератора</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400">
+            <button aria-label="Close modal" onClick={onClose} className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400">
               <X size={20} />
             </button>
           </div>
