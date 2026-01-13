@@ -35,7 +35,7 @@ ADDITIONAL_DOMAIN="https://www.your-domain.com"
 
 1.  **Clone the repository** to your server:
     ```bash
-    git clone https://github.com/vladyslav-d/lugabus.ua.git
+    git clone https://github.com/ingvar-soloma/lugabus-list.git
     cd lugabus.ua
     ```
 
