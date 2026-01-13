@@ -5,16 +5,18 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    const domain = env.ADDITIONAL_DOMAIN;
+
     return {
       server: {
         port: 3000,
         host: '0.0.0.0',
-        allowedHosts: ['localhost', '127.0.0.1', '0.0.0.0', env.ADDITIONAL_DOMAIN],
+        allowedHosts: ['localhost', '127.0.0.1', '0.0.0.0', domain].filter(Boolean),
         watch: {
           usePolling: true,
         },
         hmr: {
-          host: env.ADDITIONAL_DOMAIN,
+          host: domain,
           clientPort: 443,
           protocol: 'wss'
         },
