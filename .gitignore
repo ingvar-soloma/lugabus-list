@@ -6,7 +6,7 @@ backend/dist
 # Frontend (Vite)
 frontend/node_modules
 frontend/dist
-frontend/.env*
+frontend/.env
 frontend/.DS_Store
 
 .env
