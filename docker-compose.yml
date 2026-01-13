@@ -1,8 +1,55 @@
-
-version: '3.8'
 services:
-  lugabus-app:
-    build: .
+  frontend:
+    image: node:22
+    working_dir: /app
     ports:
-      - "3000:80"
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev"
+    environment:
+      VITE_TELEGRAM_BOT_NAME: ${VITE_TELEGRAM_BOT_NAME}
+    networks:
+      - lugabus-net
+
+  backend:
+    image: node:22
+    working_dir: /app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: sh -c "npm install && npx prisma generate && npm run dev"
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+    depends_on:
+      - db
     restart: always
+    networks:
+      - lugabus-net
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: lugabus
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - lugabus-net
+
+networks:
+  lugabus-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
