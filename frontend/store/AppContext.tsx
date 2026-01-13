@@ -5,10 +5,11 @@ import { apiService } from '../services/apiService';
 
 interface AppContextType {
   user: User | null;
+  setUser: (user: User | null) => void;
   people: Person[];
   stats: Stats | null;
   loading: boolean;
-  login: () => Promise<void>;
+  login: (telegramData: any) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
 }
@@ -68,7 +69,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   return (
-    <AppContext.Provider value={{ user, people, stats, loading, login, logout, refreshData }}>
+    <AppContext.Provider value={{ user, setUser, people, stats, loading, login, logout, refreshData }}>
       {children}
     </AppContext.Provider>
   );

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Lock, ArrowRight, Loader } from 'lucide-react';
+import { X, User as UserIcon, Lock, ArrowRight, Loader } from 'lucide-react';
 import { apiService } from '../services/apiService';
 import TelegramLogin from './TelegramLogin';
 import { useAppContext } from '../store/AppContext';
+import { User } from '../types';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -13,7 +14,7 @@ interface AuthModalProps {
 type AuthMode = 'login' | 'register';
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { login: setAppUser } = useAppContext();
+  const { setUser: setAppUser } = useAppContext();
   const [mode, setMode] = useState<AuthMode>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     setError(null);
 
     try {
-      let user;
+      let user: User;
       if (mode === 'register') {
         user = await apiService.register(formData);
       } else {
@@ -93,12 +94,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4">
             <div className="relative group">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input 
                 type="text" 
                 placeholder="Логін"
                 value={formData.username}
-                onChange={e => setFormData({...formData, username: e.target.value})}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, username: e.target.value})}
                 className="w-full bg-black/20 border border-white/10 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
                 required
               />
@@ -110,7 +111,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 type="password" 
                 placeholder="Пароль"
                 value={formData.password}
-                onChange={e => setFormData({...formData, password: e.target.value})}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, password: e.target.value})}
                 className="w-full bg-black/20 border border-white/10 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
                 required
               />
@@ -129,14 +130,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 type="text" 
                                 placeholder="Ім'я (опціонально)"
                                 value={formData.firstName}
-                                onChange={e => setFormData({...formData, firstName: e.target.value})}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, firstName: e.target.value})}
                                 className="w-full bg-black/20 border border-white/10 rounded-xl py-4 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
                             />
                             <input 
                                 type="text" 
                                 placeholder="Прізвище (опціонально)"
                                 value={formData.lastName}
-                                onChange={e => setFormData({...formData, lastName: e.target.value})}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({...formData, lastName: e.target.value})}
                                 className="w-full bg-black/20 border border-white/10 rounded-xl py-4 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
                             />
                          </div>
