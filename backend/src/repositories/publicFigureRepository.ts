@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 import { BaseRepository } from './baseRepository';
 
 export class PublicFigureRepository extends BaseRepository {
@@ -49,7 +50,7 @@ export class PublicFigureRepository extends BaseRepository {
     };
   }
 
-  async updateStatus(id: string, status: string) {
+  async updateStatus(id: string, status: Status) {
     return this.prisma.publicFigure.update({
       where: { id },
       data: { status },

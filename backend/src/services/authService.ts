@@ -58,7 +58,7 @@ export class AuthService {
 
   private generateToken(user: {
     id: string;
-    telegramId?: bigint | string;
+    telegramId?: bigint | string | null;
     username?: string | null;
     role: string;
     photoUrl?: string | null;

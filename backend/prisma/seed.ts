@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Status } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -10,21 +10,21 @@ const figures = [
     role: 'Місцевий депутат',
     statement: 'Співпраця з окупаційною владою Луганщини.',
     rating: -50,
-    status: 'APPROVED',
+    status: Status.APPROVED,
   },
   {
     name: 'Олена Коваль',
     role: 'Вчителька історії',
     statement: 'Пропаганда руського миру в школах міста.',
     rating: -30,
-    status: 'APPROVED',
+    status: Status.APPROVED,
   },
   {
     name: 'Андрій Мельник',
     role: 'Волонтер',
     statement: 'Допомога ЗСУ та евакуація цивільних.',
     rating: 80,
-    status: 'APPROVED',
+    status: Status.APPROVED,
   },
 ];
 
