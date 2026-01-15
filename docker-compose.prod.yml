@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     # In production, we assume standard 'pnpm run dev' for now
