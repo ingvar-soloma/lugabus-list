@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   frontend:
@@ -16,8 +16,8 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}

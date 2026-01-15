@@ -124,8 +124,8 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 max="100"
                 value={formData.rating}
                 onChange={e => {
-                  const val = parseInt(e.target.value);
-                  setFormData({...formData, rating: isNaN(val) ? 0 : val});
+                  const val = Number.parseInt(e.target.value);
+                  setFormData({...formData, rating: Number.isNaN(val) ? 0 : val});
                 }}
                 className="w-24 bg-zinc-900 border border-white/10 rounded-xl p-3 text-center font-black text-emerald-500 outline-none focus:ring-2 ring-emerald-500/30"
               />

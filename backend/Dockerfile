@@ -14,44 +14,61 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /usr/src/app
 
-COPY package.json pnpm-lock.yaml ./
+# Copy workspace config files
+# We need to copy all package.json files referenced in pnpm-workspace.yaml
+# to ensure pnpm install works correctly with the lockfile.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY backend/package.json ./backend/
+COPY frontend/package.json ./frontend/
 
-# Install dependencies
+# Install dependencies (all, frozen lockfile)
 RUN pnpm install --frozen-lockfile
 
-COPY . .
+# Copy backend source
+COPY backend ./backend
 
-# Generate Prisma client
-# DATABASE_URL is dummy here because generate needs schema but not connection
+# Generate Prisma client for build usage (if needed by build)
+WORKDIR /usr/src/app/backend
 RUN echo 'DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"' > .env && npx prisma generate
 
 # Compile TypeScript
 RUN pnpm run build
 
-# Remove devDependencies to reduce size
-RUN pnpm prune --prod
+# Deploy production dependencies and files to /prod/backend
+# This creates a folder with package.json, node_modules (prod), and source files (respecting .npmignore/gitignore)
+RUN pnpm --filter backend --prod deploy /prod/backend
+
+# Post-deploy setup: ensure prisma client is generated in the prod artifacts
+WORKDIR /prod/backend
+# Copy prisma folder from the source (since it might not be in 'files' or might be needed for generate)
+# We copy it from the previous WORKDIR location
+RUN cp -r /usr/src/app/backend/prisma ./prisma
+# Generate client again in the prod node_modules
+RUN echo 'DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"' > .env && npx prisma generate
+# Remove the dummy .env
+RUN rm .env
 
 # Stage 2: Create the production image
 FROM node:22-bookworm-slim
 
-# Install dumb-init and openssl
+# Install dumb-init and openssl (runtime deps)
 RUN apt-get update && apt-get install -y dumb-init openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
-# Copy files from builder and set ownership to node user
-COPY --chown=node:node --from=builder /usr/src/app/package.json ./
-COPY --chown=node:node --from=builder /usr/src/app/pnpm-lock.yaml ./
-COPY --chown=node:node --from=builder /usr/src/app/node_modules ./node_modules
-COPY --chown=node:node --from=builder /usr/src/app/dist ./dist
-COPY --chown=node:node --from=builder /usr/src/app/prisma ./prisma
+# Copy the fully prepared application from builder
+COPY --chown=node:node --from=builder /prod/backend ./
 
+# EXPOSE port
 EXPOSE 8080
+
+# Enable corepack for pnpm support
+RUN corepack enable
 
 # Use non-root user
 USER node
 
-# Use dumb-init as entrypoint for signal handling
+# Use dumb-init as entrypoint
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["node", "dist/index.js"]

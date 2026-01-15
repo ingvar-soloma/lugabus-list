@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   frontend:
@@ -9,10 +9,10 @@ services:
   backend:
     # In dev, we mount the local source code to enable hot-reloading
     volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
     # Use nodemon for development (requires 'dev' script in package.json)
-    command: sh -c "pnpm install && npx prisma generate && pnpm run dev"
+    command: sh -c "CI=true pnpm install && npx prisma generate && pnpm run dev"
     ports:
       - "8080:8080"
     depends_on:

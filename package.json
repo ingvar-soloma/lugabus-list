@@ -9,7 +9,7 @@
     "build": "pnpm -r run build",
     "backend:dev": "pnpm --filter backend run dev",
     "frontend:dev": "pnpm --filter frontend run dev",
-    "docker:dev": "make dev",
+    "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
     "backup": "pnpm run docker:dev"
   },
   "workspaces": [

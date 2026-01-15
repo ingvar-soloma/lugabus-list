@@ -120,9 +120,14 @@ const AdminDashboard: React.FC = () => {
                          <td className="py-5 px-4 font-black tracking-tight text-zinc-200">{p.name}</td>
                          <td className="py-5 px-4 text-zinc-500 font-bold uppercase text-[10px]">{p.category}</td>
                          <td className="py-5 px-4">
-                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${p.position === 'BETRAYAL' ? 'bg-red-500/10 text-red-500' : p.position === 'SUPPORT' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                            {(() => {
+                              const positionClass = p.position === 'BETRAYAL' ? 'bg-red-500/10 text-red-500' : p.position === 'SUPPORT' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500';
+                              return (
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${positionClass}`}>
                               {p.position}
                             </span>
+                              );
+                            })()}
                          </td>
                          <td className="py-5 px-4 text-right">
                            <div className="flex justify-end space-x-2">
