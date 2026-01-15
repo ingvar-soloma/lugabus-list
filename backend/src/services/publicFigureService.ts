@@ -8,12 +8,14 @@ export class PublicFigureService extends BaseService {
 
   async getAll(query: GetPublicFiguresQuery) {
     const { sortBy = 'name', sortOrder = 'asc', filter = '' } = query;
-    const where: Prisma.PublicFigureWhereInput = filter ? {
-      OR: [
-        { name: { contains: filter, mode: 'insensitive' } },
-        { role: { contains: filter, mode: 'insensitive' } },
-      ],
-    } : {};
+    const where: Prisma.PublicFigureWhereInput = filter
+      ? {
+          OR: [
+            { name: { contains: filter, mode: 'insensitive' } },
+            { role: { contains: filter, mode: 'insensitive' } },
+          ],
+        }
+      : {};
 
     return this.repository.getAll({
       where,

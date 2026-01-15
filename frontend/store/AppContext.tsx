@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Person, Stats, UserRole } from '../types';
+import { User, Person, Stats } from '../types';
 import { apiService } from '../services/apiService';
 
 interface AppContextType {
@@ -9,7 +8,7 @@ interface AppContextType {
   people: Person[];
   stats: Stats | null;
   loading: boolean;
-  login: (telegramData: any) => Promise<void>;
+  login: (telegramData: Record<string, unknown>) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
 }
@@ -27,23 +26,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       const [peopleData, statsData] = await Promise.all([
         apiService.fetchPeople(),
-        apiService.getStats()
+        apiService.getStats(),
       ]);
       setPeople(peopleData);
       setStats(statsData);
     } catch (error) {
-      console.error("Failed to fetch data", error);
+      console.error('Failed to fetch data', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const login = async (telegramData: any) => {
+  const login = async (telegramData: Record<string, unknown>) => {
     try {
       const userData = await apiService.handleTelegramLogin(telegramData);
       setUser(userData);
     } catch (error) {
-      console.error("Login failed", error);
+      console.error('Login failed', error);
     }
   };
 
@@ -59,7 +58,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try {
           const userData = await apiService.getMe();
           setUser(userData);
-        } catch (e) {
+        } catch {
           localStorage.removeItem('token');
         }
       }
@@ -69,7 +68,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   return (
-    <AppContext.Provider value={{ user, setUser, people, stats, loading, login, logout, refreshData }}>
+    <AppContext.Provider
+      value={{ user, setUser, people, stats, loading, login, logout, refreshData }}
+    >
       {children}
     </AppContext.Provider>
   );
@@ -77,6 +78,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
 export const useAppContext = () => {
   const context = useContext(AppContext);
-  if (!context) throw new Error("useAppContext must be used within AppProvider");
+  if (!context) throw new Error('useAppContext must be used within AppProvider');
   return context;
 };

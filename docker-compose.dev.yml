@@ -1,9 +1,7 @@
-
-
 services:
   frontend:
     ports:
-      - "3000:3000"
+      - '3000:3000'
     command: sh -c "corepack enable && pnpm install && pnpm run dev"
 
   backend:
@@ -14,10 +12,14 @@ services:
     # Use nodemon for development (requires 'dev' script in package.json)
     command: sh -c "CI=true pnpm install && npx prisma generate && pnpm run dev"
     ports:
-      - "8080:8080"
+      - '8080:8080'
     depends_on:
       - db
 
   db:
     ports:
-      - "5432:5432" # Expose DB port for local development tools (DBeaver, etc.)
+      - '5432:5432'
+
+  redis:
+    ports:
+      - '6379:6379' # Expose DB port for local development tools (DBeaver, etc.)

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '../store/AppContext';
 import { Users, AlertTriangle, ShieldCheck, Activity } from 'lucide-react';
@@ -19,7 +18,7 @@ const StatsBar: React.FC = () => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
       {statItems.map((item, idx) => (
-        <motion.div 
+        <motion.div
           key={item.label}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -30,7 +29,9 @@ const StatsBar: React.FC = () => {
             <item.icon size={20} />
           </div>
           <div>
-            <p className="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-0.5">{item.label}</p>
+            <p className="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-0.5">
+              {item.label}
+            </p>
             <p className="text-2xl font-black tracking-tighter leading-none">{item.value}</p>
           </div>
         </motion.div>

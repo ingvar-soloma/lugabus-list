@@ -1,15 +1,14 @@
-
 export enum PoliticalPosition {
-  SUPPORT = 'SUPPORT',     // За Україну
-  BETRAYAL = 'BETRAYAL',   // Проти / Зашквар
-  NEUTRAL = 'NEUTRAL'      // Морозиться / Невизначено
+  SUPPORT = 'SUPPORT', // За Україну
+  BETRAYAL = 'BETRAYAL', // Проти / Зашквар
+  NEUTRAL = 'NEUTRAL', // Морозиться / Невизначено
 }
 
 export enum UserRole {
   ADMIN = 'ADMIN',
   MODERATOR = 'MODERATOR',
   USER = 'USER',
-  GUEST = 'GUEST'
+  GUEST = 'GUEST',
 }
 
 export interface Proof {

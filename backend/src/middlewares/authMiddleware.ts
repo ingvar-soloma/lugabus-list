@@ -1,6 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
+interface AuthRequest extends Request {
+  user?: string | jwt.JwtPayload;
+}
+
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
 
@@ -13,7 +17,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
       if (err) {
         return res.sendStatus(403);
       }
-      (req as any).user = user;
+      (req as AuthRequest).user = user;
       next();
     });
   } else {

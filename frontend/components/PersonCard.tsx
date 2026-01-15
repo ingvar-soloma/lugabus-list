@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Person, PoliticalPosition } from '../types';
 import { motion } from 'framer-motion';
@@ -15,28 +14,29 @@ const PersonCard: React.FC<PersonCardProps> = ({ person, onClick }) => {
       case PoliticalPosition.SUPPORT:
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-            <ShieldCheck size={12} className="mr-1"/> Патріот
+            <ShieldCheck size={12} className="mr-1" /> Патріот
           </span>
         );
       case PoliticalPosition.BETRAYAL:
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
-            <ShieldAlert size={12} className="mr-1"/> Зашквар
+            <ShieldAlert size={12} className="mr-1" /> Зашквар
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
-            <ShieldQuestion size={12} className="mr-1"/> Морозиться
+            <ShieldQuestion size={12} className="mr-1" /> Морозиться
           </span>
         );
     }
   };
 
-  const scoreColor = person.score > 50 ? 'text-emerald-500' : person.score < 0 ? 'text-red-500' : 'text-amber-500';
+  const scoreColor =
+    person.score > 50 ? 'text-emerald-500' : person.score < 0 ? 'text-red-500' : 'text-amber-500';
 
   return (
-    <motion.div 
+    <motion.div
       layout
       whileHover={{ y: -6, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
@@ -46,22 +46,24 @@ const PersonCard: React.FC<PersonCardProps> = ({ person, onClick }) => {
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center space-x-4">
           <div className="relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5">
-             <img 
-              src={person.avatar} 
-              alt={person.name} 
+            <img
+              src={person.avatar}
+              alt={person.name}
               className="w-14 h-14 object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out"
             />
           </div>
           <div>
-            <h3 className="font-black text-lg leading-none tracking-tight group-hover:text-emerald-400 transition-colors">{person.name}</h3>
-            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">{person.category}</p>
+            <h3 className="font-black text-lg leading-none tracking-tight group-hover:text-emerald-400 transition-colors">
+              {person.name}
+            </h3>
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">
+              {person.category}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="mb-6">
-        {getPositionBadge(person.position)}
-      </div>
+      <div className="mb-6">{getPositionBadge(person.position)}</div>
 
       <p className="text-zinc-400 text-sm line-clamp-2 mb-6 font-medium leading-relaxed">
         {person.description}
@@ -69,17 +71,23 @@ const PersonCard: React.FC<PersonCardProps> = ({ person, onClick }) => {
 
       <div className="flex items-center justify-between border-t border-white/5 pt-4">
         <div className="flex flex-col">
-          <span className="text-[10px] uppercase text-zinc-600 font-black tracking-widest">Рейтинг</span>
+          <span className="text-[10px] uppercase text-zinc-600 font-black tracking-widest">
+            Рейтинг
+          </span>
           <span className={`text-2xl font-black tracking-tighter ${scoreColor}`}>
             {person.score > 0 ? `+${person.score}` : person.score}
           </span>
         </div>
         <div className="flex flex-col text-right">
-          <span className="text-[10px] uppercase text-zinc-600 font-black tracking-widest">Пруфи</span>
-          <span className="text-2xl font-black tracking-tighter text-zinc-100">{person.proofsCount}</span>
+          <span className="text-[10px] uppercase text-zinc-600 font-black tracking-widest">
+            Пруфи
+          </span>
+          <span className="text-2xl font-black tracking-tighter text-zinc-100">
+            {person.proofsCount}
+          </span>
         </div>
       </div>
-      
+
       <div className="mt-4 flex items-center text-[10px] text-zinc-600 font-bold uppercase tracking-widest">
         <Calendar size={10} className="mr-1.5" /> Оновлено: {person.lastUpdated}
       </div>

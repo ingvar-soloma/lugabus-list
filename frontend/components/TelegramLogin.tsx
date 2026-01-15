@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import * as React from 'react';
+import { useEffect, useRef } from 'react';
+import { User } from '../types';
 
 interface Props {
   botName: string;
-  onAuth: (user: any) => void;
-  lang?: string;
+  onAuth: (user: User) => void;
   buttonSize?: 'large' | 'medium' | 'small';
   cornerRadius?: number;
   requestAccess?: boolean;
@@ -12,7 +13,6 @@ interface Props {
 const TelegramLogin: React.FC<Props> = ({
   botName,
   onAuth,
-  lang = 'uk',
   buttonSize = 'large',
   cornerRadius,
   requestAccess = true,
@@ -20,20 +20,19 @@ const TelegramLogin: React.FC<Props> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // @ts-ignore
-    window.onTelegramAuth = (user: any) => {
-      onAuth(user);
+    globalThis.onTelegramAuth = (user: Record<string, unknown>) => {
+      onAuth(user as unknown as User);
     };
 
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
-    script.setAttribute('data-telegram-login', botName);
-    script.setAttribute('data-size', buttonSize);
+    script.dataset.telegramLogin = botName;
+    script.dataset.size = buttonSize;
     if (cornerRadius !== undefined) {
-      script.setAttribute('data-radius', cornerRadius.toString());
+      script.dataset.radius = cornerRadius.toString();
     }
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    script.setAttribute('data-request-access', requestAccess ? 'write' : '');
+    script.dataset.onauth = 'onTelegramAuth(user)';
+    script.dataset.requestAccess = requestAccess ? 'write' : '';
     script.async = true;
 
     if (containerRef.current) {
@@ -44,8 +43,7 @@ const TelegramLogin: React.FC<Props> = ({
       if (containerRef.current) {
         containerRef.current.innerHTML = '';
       }
-      // @ts-ignore
-      delete window.onTelegramAuth;
+      delete globalThis.onTelegramAuth;
     };
   }, [botName, onAuth, buttonSize, cornerRadius, requestAccess]);
 

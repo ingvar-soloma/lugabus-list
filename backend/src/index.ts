@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit'; // Security: Rate limiting
@@ -27,21 +27,25 @@ const limiter = rateLimit({
 // Apply the rate limiting middleware to all requests
 app.use(limiter);
 
-const allowedOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'];
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',')
+  : ['http://localhost:3000'];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-      callback(null, true);
-    } else {
-      logger.warn(`Origin ${origin} not allowed by CORS`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        logger.warn(`Origin ${origin} not allowed by CORS`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -52,11 +56,12 @@ app.get('/health', (req: Request, res: Response) => {
   res.status(200).send('OK');
 });
 
+import { errorHandler } from './middlewares/errorMiddleware';
+
+// ... existing imports ...
+
 // Global error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  logger.error(err.stack);
-  res.status(500).send('Something broke!');
-});
+app.use(errorHandler);
 
 app.listen(port, () => {
   logger.info(`Server is running on port ${port}`);

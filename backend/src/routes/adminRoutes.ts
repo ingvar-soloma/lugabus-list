@@ -8,6 +8,11 @@ const router = Router();
 const controller = new AdminController();
 
 router.post('/login', validate(loginSchema), controller.login);
-router.patch('/figures/:id/status', authMiddleware, validate(updateStatusSchema), controller.updateStatus);
+router.patch(
+  '/figures/:id/status',
+  authMiddleware,
+  validate(updateStatusSchema),
+  controller.updateStatus,
+);
 
 export default router;

@@ -10,33 +10,33 @@ const figures = [
     role: 'Місцевий депутат',
     statement: 'Співпраця з окупаційною владою Луганщини.',
     rating: -50,
-    status: 'APPROVED' as any,
+    status: 'APPROVED',
   },
   {
     name: 'Олена Коваль',
     role: 'Вчителька історії',
     statement: 'Пропаганда руського миру в школах міста.',
     rating: -30,
-    status: 'APPROVED' as any,
+    status: 'APPROVED',
   },
   {
     name: 'Андрій Мельник',
     role: 'Волонтер',
     statement: 'Допомога ЗСУ та евакуація цивільних.',
     rating: 80,
-    status: 'APPROVED' as any,
-  }
+    status: 'APPROVED',
+  },
 ];
 
 try {
   for (const figure of figures) {
     const existing = await prisma.publicFigure.findFirst({
-      where: { name: figure.name }
+      where: { name: figure.name },
     });
-    
+
     if (!existing) {
       await prisma.publicFigure.create({
-        data: figure
+        data: figure,
       });
     }
   }

@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_TELEGRAM_BOT_NAME: string;
-  [key: string]: any;
+  [key: string]: string | undefined;
 }
 
 interface ImportMeta {
