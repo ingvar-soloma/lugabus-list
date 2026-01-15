@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  frontend:
+    # In production, we assume standard 'pnpm run dev' for now
+    command: sh -c "corepack enable && pnpm install && pnpm run dev"
+    restart: always
+
+  backend:
+    # In production, we rely on the built Docker image (from the Dockerfile).
+    # No volume mounts for code, ensuring immutability.
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No ports exposed to host for security
