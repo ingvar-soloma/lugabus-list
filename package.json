@@ -1,0 +1,22 @@
+{
+  "name": "lugabus-list",
+  "version": "1.0.0",
+  "description": "Lugabus monorepo with Backend and Frontend",
+  "private": true,
+  "packageManager": "pnpm@9.1.0",
+  "scripts": {
+    "dev": "pnpm -r run dev",
+    "build": "pnpm -r run build",
+    "backend:dev": "pnpm --filter backend run dev",
+    "frontend:dev": "pnpm --filter frontend run dev",
+    "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build",
+    "backup": "pnpm run docker:dev"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.git
+**/.gitignore
+**/Dockerfile
+**.env
+**.env.*
+frontend/dist
+backend/dist
+node_modules
+.git
+.gitignore
+.env
+pnpm-debug.log

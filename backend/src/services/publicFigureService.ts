@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { BaseService } from './baseService';
 
 export class PublicFigureService extends BaseService {
-  private repository = new PublicFigureRepository();
+  private readonly repository = new PublicFigureRepository();
 
   async getAll(query: GetPublicFiguresQuery) {
     const { sortBy = 'name', sortOrder = 'asc', filter = '' } = query;

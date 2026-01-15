@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { AppProvider, useAppContext } from './store/AppContext';
-import { Search, Shield, LogOut, LogIn, Info, AlertCircle, HelpCircle, Mail, ChevronRight } from 'lucide-react';
+import { Search, Shield, LogOut, LogIn, AlertCircle, Mail, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import StatsBar from './components/StatsBar';
 import PersonCard from './components/PersonCard';
@@ -11,7 +11,6 @@ import AuthModal from './components/AuthModal';
 import AddFigureModal from './components/AddFigureModal';
 import { CATEGORIES } from './constants';
 import { Person, UserRole } from './types';
-import { Plus } from 'lucide-react';
 
 // Page Components
 const MethodologyPage = () => (
@@ -39,12 +38,12 @@ const ContactPage = () => (
       </div>
       <form className="space-y-6 relative z-10" onSubmit={e => e.preventDefault()}>
         <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Ваше Ім'я або Організація</label>
-          <input type="text" className="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 focus:ring-2 ring-emerald-500/50 outline-none transition-all" placeholder="Введіть дані..." />
+          <label htmlFor="contact-name" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Ваше Ім'я або Організація</label>
+          <input id="contact-name" type="text" className="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 focus:ring-2 ring-emerald-500/50 outline-none transition-all" placeholder="Введіть дані..." />
         </div>
         <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Суть звернення</label>
-          <textarea className="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 h-32 focus:ring-2 ring-emerald-500/50 outline-none transition-all" placeholder="Опишіть вашу пропозицію або скаргу..."></textarea>
+          <label htmlFor="contact-message" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Суть звернення</label>
+          <textarea id="contact-message" className="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 h-32 focus:ring-2 ring-emerald-500/50 outline-none transition-all" placeholder="Опишіть вашу пропозицію або скаргу..."></textarea>
         </div>
         <button className="w-full bg-emerald-500 text-zinc-950 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20 active:scale-95">Надіслати Повідомлення</button>
       </form>
@@ -71,14 +70,42 @@ const LugaBusContent: React.FC = () => {
       .sort((a, b) => b.score - a.score);
   }, [people, search, selectedCategory]);
 
+  let content;
+  if (loading) {
+    content = (
+      <div className="h-96 flex flex-col items-center justify-center space-y-6">
+        <div className="w-10 h-10 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  } else if (filteredPeople.length > 0) {
+    content = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredPeople.map(p => (
+          <PersonCard key={p.id} person={p} onClick={setSelectedPerson} />
+        ))}
+      </div>
+    );
+  } else {
+    content = (
+      <div className="h-96 glass rounded-3xl flex flex-col items-center justify-center text-center p-12">
+         <AlertCircle size={40} className="text-zinc-800 mb-6" />
+         <h3 className="text-2xl font-black tracking-tight mb-2">РЕЗУЛЬТАТІВ НЕМАЄ</h3>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-20 bg-zinc-950 text-zinc-100 selection:bg-emerald-500/40">
       {/* Navigation */}
       <nav className="glass sticky top-0 z-40 px-6 md:px-12 py-5 flex justify-between items-center mb-10 border-b border-white/5 backdrop-blur-2xl">
-        <div className="flex items-center space-x-3 cursor-pointer group" onClick={() => setCurrentPage('home')}>
+        <button 
+          className="flex items-center space-x-3 cursor-pointer group bg-transparent border-none p-0" 
+          onClick={() => setCurrentPage('home')}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setCurrentPage('home'); }}
+        >
           <div className="bg-emerald-500 w-10 h-10 flex items-center justify-center rounded-xl text-zinc-950 font-black text-xl shadow-lg shadow-emerald-500/20 transition-transform group-hover:scale-105">LB</div>
           <span className="text-2xl font-black tracking-tighter uppercase italic">LugaBus<span className="text-emerald-500">.ua</span></span>
-        </div>
+        </button>
         
         <div className="hidden lg:flex items-center space-x-10 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
           <button 
@@ -111,7 +138,7 @@ const LugaBusContent: React.FC = () => {
                 <p className="text-xs font-black tracking-tight">{user.username}</p>
                 <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">{user.role}</p>
               </div>
-              <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`} className="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20" />
+              <img src={user.avatar || `https://ui-avatars.com/api/?name=${user.username}&background=random`} alt={`${user.username}'s avatar`} className="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20" />
               <button onClick={logout} className="p-2 text-zinc-600 hover:text-red-500 transition-colors">
                 <LogOut size={18} />
               </button>
@@ -178,22 +205,7 @@ const LugaBusContent: React.FC = () => {
                 </div>
               </div>
 
-              {loading ? (
-                <div className="h-96 flex flex-col items-center justify-center space-y-6">
-                  <div className="w-10 h-10 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              ) : filteredPeople.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredPeople.map(p => (
-                    <PersonCard key={p.id} person={p} onClick={setSelectedPerson} />
-                  ))}
-                </div>
-              ) : (
-                <div className="h-96 glass rounded-3xl flex flex-col items-center justify-center text-center p-12">
-                   <AlertCircle size={40} className="text-zinc-800 mb-6" />
-                   <h3 className="text-2xl font-black tracking-tight mb-2">РЕЗУЛЬТАТІВ НЕМАЄ</h3>
-                </div>
-              )}
+              {content}
             </motion.div>
           )}
 
@@ -228,7 +240,7 @@ const LugaBusContent: React.FC = () => {
           <div className="flex space-x-8 text-[10px] font-black uppercase tracking-widest text-zinc-600">
             <button onClick={() => setCurrentPage('methodology')} className="hover:text-emerald-500 transition-colors">Правила</button>
             <button onClick={() => setCurrentPage('contact')} className="hover:text-emerald-500 transition-colors">Зворотний зв'язок</button>
-            <a href="#" className="hover:text-emerald-500 transition-colors">Support</a>
+            <button className="hover:text-emerald-500 transition-colors">Support</button>
           </div>
         </div>
       </footer>

@@ -2,33 +2,33 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  console.log('Seeding data...');
+console.log('Seeding data...');
 
-  const figures = [
-    {
-      name: 'Іван Боднар',
-      role: 'Місцевий депутат',
-      statement: 'Співпраця з окупаційною владою Луганщини.',
-      rating: -50,
-      status: 'APPROVED' as any,
-    },
-    {
-      name: 'Олена Коваль',
-      role: 'Вчителька історії',
-      statement: 'Пропаганда руського миру в школах міста.',
-      rating: -30,
-      status: 'APPROVED' as any,
-    },
-    {
-      name: 'Андрій Мельник',
-      role: 'Волонтер',
-      statement: 'Допомога ЗСУ та евакуація цивільних.',
-      rating: 80,
-      status: 'APPROVED' as any,
-    }
-  ];
+const figures = [
+  {
+    name: 'Іван Боднар',
+    role: 'Місцевий депутат',
+    statement: 'Співпраця з окупаційною владою Луганщини.',
+    rating: -50,
+    status: 'APPROVED' as any,
+  },
+  {
+    name: 'Олена Коваль',
+    role: 'Вчителька історії',
+    statement: 'Пропаганда руського миру в школах міста.',
+    rating: -30,
+    status: 'APPROVED' as any,
+  },
+  {
+    name: 'Андрій Мельник',
+    role: 'Волонтер',
+    statement: 'Допомога ЗСУ та евакуація цивільних.',
+    rating: 80,
+    status: 'APPROVED' as any,
+  }
+];
 
+try {
   for (const figure of figures) {
     const existing = await prisma.publicFigure.findFirst({
       where: { name: figure.name }
@@ -42,13 +42,9 @@ async function main() {
   }
 
   console.log('Seeding completed!');
+} catch (e) {
+  console.error(e);
+  process.exit(1);
+} finally {
+  await prisma.$disconnect();
 }
-
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
