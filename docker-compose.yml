@@ -1,49 +1,39 @@
+
+
 services:
   frontend:
     image: node:22
     working_dir: /app
-    ports:
-      - "3000:3000"
+    environment:
+      VITE_TELEGRAM_BOT_NAME: ${VITE_TELEGRAM_BOT_NAME}
+    # We mount volumes here because there is no frontend Dockerfile to build the image with code.
+    # In a proper production setup, you should add a Dockerfile for frontend too.
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: sh -c "npm install && npm run dev"
-    environment:
-      VITE_TELEGRAM_BOT_NAME: ${VITE_TELEGRAM_BOT_NAME}
     networks:
       - lugabus-net
 
   backend:
-    image: node:22
-    working_dir: /app
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: sh -c "npm install && npx prisma generate && npm run dev"
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       CORS_ORIGIN: ${CORS_ORIGIN}
-    depends_on:
-      - db
-    restart: always
     networks:
       - lugabus-net
 
   db:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: lugabus
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-    restart: always
     networks:
       - lugabus-net
 

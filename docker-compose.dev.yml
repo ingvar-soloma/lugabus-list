@@ -1,0 +1,23 @@
+
+
+services:
+  frontend:
+    ports:
+      - "3000:3000"
+    command: sh -c "corepack enable && pnpm install && pnpm run dev"
+
+  backend:
+    # In dev, we mount the local source code to enable hot-reloading
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    # Use nodemon for development (requires 'dev' script in package.json)
+    command: sh -c "CI=true pnpm install && npx prisma generate && pnpm run dev"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  db:
+    ports:
+      - "5432:5432" # Expose DB port for local development tools (DBeaver, etc.)

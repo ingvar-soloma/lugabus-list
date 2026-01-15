@@ -66,7 +66,7 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Надіслати на розгляд модератора</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400">
+            <button aria-label="Close modal" onClick={onClose} className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400">
               <X size={20} />
             </button>
           </div>
@@ -79,8 +79,9 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
             )}
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Прізвище та Ім'я</label>
+              <label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Прізвище та Ім'я</label>
               <input 
+                id="name"
                 required
                 type="text" 
                 value={formData.name}
@@ -91,8 +92,9 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Роль / Посада</label>
+              <label htmlFor="role" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Роль / Посада</label>
               <input 
+                id="role"
                 required
                 type="text" 
                 value={formData.role}
@@ -103,8 +105,9 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
             </div>
 
             <div>
-              <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Суть діяльності (Опис/Заява)</label>
+              <label htmlFor="statement" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2 block">Суть діяльності (Опис/Заява)</label>
               <textarea 
+                id="statement"
                 required
                 value={formData.statement}
                 onChange={e => setFormData({...formData, statement: e.target.value})}
@@ -115,17 +118,18 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
 
             <div className="flex items-center space-x-4 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
               <div className="flex-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1 block">Попередня оцінка</label>
+                <label htmlFor="rating" className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1 block">Попередня оцінка</label>
                 <p className="text-[9px] text-emerald-500/50 leading-tight uppercase font-bold">Оцінка від -100 (зрада) до +100 (підтримка)</p>
               </div>
               <input 
+                id="rating"
                 type="number" 
                 min="-100" 
                 max="100"
                 value={formData.rating}
                 onChange={e => {
-                  const val = parseInt(e.target.value);
-                  setFormData({...formData, rating: isNaN(val) ? 0 : val});
+                  const val = Number.parseInt(e.target.value);
+                  setFormData({...formData, rating: Number.isNaN(val) ? 0 : val});
                 }}
                 className="w-24 bg-zinc-900 border border-white/10 rounded-xl p-3 text-center font-black text-emerald-500 outline-none focus:ring-2 ring-emerald-500/30"
               />

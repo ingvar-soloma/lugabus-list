@@ -1,5 +1,5 @@
-import { Prisma, Status } from '@prisma/client';
-import { BaseRepository } from './baseRepository';
+import {Prisma, Status} from '@prisma/client';
+import {BaseRepository} from './baseRepository';
 
 export class PublicFigureRepository extends BaseRepository {
   async getAll(options: { where?: Prisma.PublicFigureWhereInput; orderBy?: Prisma.PublicFigureOrderByWithRelationInput }) {
@@ -22,13 +22,20 @@ export class PublicFigureRepository extends BaseRepository {
   }
 
   private mapToPerson(figure: any) {
+    let position = 'NEUTRAL';
+    if (figure.rating > 0) {
+      position = 'SUPPORT';
+    } else if (figure.rating < 0) {
+      position = 'BETRAYAL';
+    }
+
     return {
       id: figure.id,
       name: figure.name,
       description: figure.statement,
       avatar: `https://picsum.photos/seed/${figure.id}/200/200`, // Placeholder
       category: figure.role,
-      position: figure.rating > 0 ? 'SUPPORT' : figure.rating < 0 ? 'BETRAYAL' : 'NEUTRAL',
+      position,
       score: figure.rating,
       proofsCount: figure.proofs?.length || 0,
       lastUpdated: figure.updatedAt.toISOString().split('T')[0],
@@ -56,13 +63,12 @@ export class PublicFigureRepository extends BaseRepository {
       this.prisma.proof.count({ where: { figure: { status: 'PENDING' } } })
     ]);
 
-    const stats = {
+    return {
       totalMonitored: total,
-      betrayalCount: await this.prisma.publicFigure.count({ where: { rating: { lt: 0 } } }),
-      supportCount: await this.prisma.publicFigure.count({ where: { rating: { gt: 0 } } }),
+      betrayalCount: await this.prisma.publicFigure.count({where: {rating: {lt: 0}}}),
+      supportCount: await this.prisma.publicFigure.count({where: {rating: {gt: 0}}}),
       pendingProofs: pending,
       weeklyActivity: 12 // Mock
     };
-    return stats;
   }
 }

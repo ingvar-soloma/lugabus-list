@@ -1,7 +1,10 @@
 # Stage 1: Build the application
 FROM node:22-bookworm-slim AS builder
 
-# Встановлюємо залежності для збірки (потрібні для node-gyp, prisma query engine)
+# Enable corepack for pnpm
+RUN corepack enable
+
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     openssl \
     python3 \
@@ -11,37 +14,61 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+# Copy workspace config files
+# We need to copy all package.json files referenced in pnpm-workspace.yaml
+# to ensure pnpm install works correctly with the lockfile.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY backend/package.json ./backend/
+COPY frontend/package.json ./frontend/
 
-# Використовуємо 'npm install' бо lock-файл може бути несинхронізований
-RUN npm install
+# Install dependencies (all, frozen lockfile)
+RUN pnpm install --frozen-lockfile
 
-COPY . .
+# Copy backend source
+COPY backend ./backend
 
-# Генерація Prisma клієнта
-# Примітка: DATABASE_URL тут dummy, бо generate потребує валідної схеми, але не підключення
+# Generate Prisma client for build usage (if needed by build)
+WORKDIR /usr/src/app/backend
 RUN echo 'DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"' > .env && npx prisma generate
 
-# Компіляція TypeScript
-RUN npm run build
+# Compile TypeScript
+RUN pnpm run build
 
-# ! ВАЖЛИВО: Видаляємо devDependencies, щоб зменшити розмір node_modules перед копіюванням
-RUN npm prune --production
+# Deploy production dependencies and files to /prod/backend
+# This creates a folder with package.json, node_modules (prod), and source files (respecting .npmignore/gitignore)
+RUN pnpm --filter backend --prod deploy /prod/backend
+
+# Post-deploy setup: ensure prisma client is generated in the prod artifacts
+WORKDIR /prod/backend
+# Copy prisma folder from the source (since it might not be in 'files' or might be needed for generate)
+# We copy it from the previous WORKDIR location
+RUN cp -r /usr/src/app/backend/prisma ./prisma
+# Generate client again in the prod node_modules
+RUN echo 'DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"' > .env && npx prisma generate
+# Remove the dummy .env
+RUN rm .env
 
 # Stage 2: Create the production image
 FROM node:22-bookworm-slim
 
+# Install dumb-init and openssl (runtime deps)
+RUN apt-get update && apt-get install -y dumb-init openssl && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /usr/src/app
 
-# ! ВАЖЛИВО: Встановлюємо OpenSSL у фінальний образ. Без цього Prisma впаде з помилкою.
-RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+# Copy the fully prepared application from builder
+COPY --chown=node:node --from=builder /prod/backend ./
 
-# Копіюємо лише необхідне з builder
-COPY --from=builder /usr/src/app/package*.json ./
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/prisma ./prisma
-
+# EXPOSE port
 EXPOSE 8080
+
+# Enable corepack for pnpm support
+RUN corepack enable
+
+# Use non-root user
+USER node
+
+# Use dumb-init as entrypoint
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
 CMD ["node", "dist/index.js"]
