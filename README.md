@@ -67,3 +67,36 @@ We use `make` to manage Docker commands.
 - `docker-compose.dev.yml`: Development overrides (hot-reloading).
 - `docker-compose.prod.yml`: Production overrides (security/optimization).
 - `Makefile`: Shortcuts for management commands.
+- `docker-compose.ci.yml`: Configuration for containerized CI runs.
+
+## 🧪 CI & Testing
+
+To run the full suite of checks (Lint, Prisma, Build):
+
+### 1. Locally (pnpm)
+
+If you have Node 22 and pnpm installed:
+
+```powershell
+pnpm run local-ci
+```
+
+Or on Windows using the helper script:
+
+```powershell
+.\scripts\local-ci.ps1
+```
+
+### 2. In Docker (Recommended for environment consistency)
+
+If you don't have `make` installed:
+
+```powershell
+docker-compose -f docker-compose.ci.yml run --rm ci
+```
+
+If you have `make`:
+
+```bash
+make ci-docker
+```

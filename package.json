@@ -13,6 +13,7 @@
     "backup": "pnpm run docker:dev",
     "lint": "eslint . --ext .ts,.js,.tsx,.jsx",
     "format": "prettier --write .",
+    "local-ci": "pnpm install --frozen-lockfile && pnpm lint && pnpm --filter backend exec prisma generate && pnpm build",
     "prepare": "husky"
   },
   "workspaces": [

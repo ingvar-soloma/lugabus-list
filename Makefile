@@ -13,6 +13,8 @@ help:
 	@echo "  make down         - Stop and remove all containers"
 	@echo "  make logs         - View output logs (follow)"
 	@echo "  make shell-back   - Open shell in backend container"
+	@echo "  make ci           - Run CI checks locally (pnpm)"
+	@echo "  make ci-docker    - Run CI checks in Docker"
 
 # Development
 .PHONY: dev
@@ -48,3 +50,13 @@ logs:
 .PHONY: shell-back
 shell-back:
 	docker-compose exec backend sh
+
+# CI
+.PHONY: ci
+ci:
+	pnpm install --frozen-lockfile
+	pnpm run local-ci
+
+.PHONY: ci-docker
+ci-docker:
+	docker-compose -f docker-compose.ci.yml run --rm ci

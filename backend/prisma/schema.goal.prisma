@@ -1,0 +1,168 @@
+// Це схема для Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- КОРИСТУВАЧІ ТА АНОНІМНІСТЬ ---
+
+model User {
+  id            String   @id @default(uuid())
+
+  // Ми не зберігаємо email/phone. Тільки хеш від провайдера.
+  // authIdentifier = SHA256(TelegramID + SALT)
+  authIdentifier String   @unique
+  authType       AuthType @default(TELEGRAM)
+
+  // Публічне відображення (може бути рандомним, напр. "Silent Observer 42")
+  displayName    String?
+
+  // Рейтинг та довіра
+  reputation     Int      @default(0)
+  role           UserRole @default(EDITOR)
+
+  // Зв'язки
+  revisions      Revision[] // Які правки вніс
+  votes          Vote[]     // Де голосував
+  appeals        Appeal[]   // Які апеляції подав
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum AuthType {
+  TELEGRAM
+  WALLET
+  ANONYMOUS_SESSION
+}
+
+enum UserRole {
+  BANNED
+  EDITOR     // Звичайний користувач
+  MODERATOR  // Може вирішувати спірні апеляції
+  ADMIN      // Технічний адмін
+}
+
+// --- ОСНОВНИЙ КОНТЕНТ (ВІКІ) ---
+
+model Person {
+  id        String   @id @default(uuid())
+
+  // Основні поля для пошуку (кешовані з останньої актуальної ревізії)
+  fullName  String
+  slug      String   @unique // Для гарних URL: /person/ivan-ivanenko
+
+  // Статус (напр. "Під слідством", "Чиновник", "Виправданий")
+  status    String?
+
+  // Поточний актуальний зліпок даних (JSON), щоб не збирати з історії щоразу
+  currentSnapshot Json
+
+  // Чи заблокована сторінка для редагування (напр. через вандалізм)
+  isLocked        Boolean @default(false)
+
+  // Історія змін (головне джерело правди)
+  revisions       Revision[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// --- ІСТОРІЯ ЗМІН (IMMUTABLE) ---
+
+model Revision {
+  id          String   @id @default(uuid())
+
+  personId    String
+  person      Person   @relation(fields: [personId], references: [id])
+
+  authorId    String?  // Null якщо повністю анонімно (рідко)
+  author      User?    @relation(fields: [authorId], references: [id])
+
+  // Зміст правки
+  contentSnapshot Json   // Повний текст на момент цієї ревізії
+  diffSummary     String? // Текстовий опис: "Змінено дату народження"
+
+  // Докази
+  proofLinks      String[] // URL на зовнішні джерела
+  proofFiles      String[] // URL на S3/IPFS файли
+
+  // Оцінка
+  aiScore         Int?     // Оцінка від Gemini (0-100)
+  aiAnalysis      String?  // Пояснення від AI: "Виявлено маніпулятивну мову..."
+
+  status          RevisionStatus @default(PENDING)
+
+  // Якщо правка була відхилена, тут причина
+  rejectionReason String?
+
+  createdAt       DateTime @default(now())
+}
+
+enum RevisionStatus {
+  PENDING    // Чекає перевірки (AI або людиною)
+  APPROVED   // Прийнято і відображається
+  REJECTED   // Відхилено
+  APPEALED   // Подано на апеляцію
+}
+
+// --- СУДОВА СИСТЕМА ---
+
+model Appeal {
+  id          String   @id @default(uuid())
+
+  revisionId  String   @unique
+  revision    Revision @relation(fields: [revisionId], references: [id])
+
+  initiatorId String
+  initiator   User     @relation(fields: [initiatorId], references: [id])
+
+  reason      String   // Чому користувач не згоден з відмовою/прийняттям
+  status      AppealStatus @default(OPEN)
+
+  votes       Vote[]
+
+  createdAt   DateTime @default(now())
+  closedAt    DateTime?
+}
+
+enum AppealStatus {
+  OPEN
+  GRANTED    // Апеляцію задоволено
+  DISMISSED  // Апеляцію відхилено
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  appealId  String
+  appeal    Appeal   @relation(fields: [appealId], references: [id])
+
+  decision  Boolean  // ЗА або ПРОТИ
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, appealId]) // Один голос на одну апеляцію
+}
+
+// --- БЕЗПЕКА ТА БАНИ ---
+
+model Blacklist {
+  id             String   @id @default(uuid())
+
+  // Зберігаємо хеш відбитка браузера або хеш IP
+  identifierHash String   @unique
+
+  reason         String
+  expiresAt      DateTime? // Null = назавжди
+
+  createdAt      DateTime @default(now())
+}
