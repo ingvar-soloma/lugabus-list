@@ -30,13 +30,19 @@ const figures = [
 
 try {
   for (const figure of figures) {
-    const existing = await prisma.publicFigure.findFirst({
-      where: { name: figure.name },
+    const existing = await prisma.person.findFirst({
+      where: { fullName: figure.name },
     });
 
     if (!existing) {
-      await prisma.publicFigure.create({
-        data: figure,
+      await prisma.person.create({
+        data: {
+          fullName: figure.name,
+          currentRole: figure.role,
+          bio: figure.statement,
+          reputation: figure.rating,
+          status: figure.status,
+        },
       });
     }
   }

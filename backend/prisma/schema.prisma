@@ -6,7 +6,6 @@ generator client {
 
 datasource db {
   provider   = "postgresql"
-  url        = env("DATABASE_URL")
   extensions = [pg_trgm]
 }
 
@@ -91,6 +90,15 @@ model Vote {
 model User {
   id              String   @id @default(uuid())
 
+  // Fields required for AuthService
+  username        String?  @unique
+  password        String?
+  firstName       String?
+  lastName        String?
+  role            UserRole @default(USER)
+  telegramId      BigInt?  @unique
+  photoUrl        String?
+
   // Постійний анонімний ідентифікатор (для зв'язку з ревізіями)
   // Герується як HMAC(TG_ID, PEPPER)
   pHash           String   @unique
@@ -108,6 +116,10 @@ model User {
 
   reputation      Float    @default(10.0)
   createdAt       DateTime @default(now())
+
+  revisions       Revision[]
+  votes           Vote[]
+  auditLogs       AuditLog[]
 }
 
 model Tag {

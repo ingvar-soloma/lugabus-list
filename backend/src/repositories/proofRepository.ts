@@ -3,6 +3,8 @@ import { CreateProofBody } from '../models/types/proofTypes';
 
 export class ProofRepository extends BaseRepository {
   async createWithAuditLog(data: CreateProofBody) {
+    throw new Error('Method not implemented compatible with new Schema (Person/Revision/Evidence)');
+    /*
     return this.prisma.$transaction(async (tx) => {
       const proof = await tx.proof.create({
         data: {
@@ -24,5 +26,6 @@ export class ProofRepository extends BaseRepository {
 
       return proof;
     });
+    */
   }
 }

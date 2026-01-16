@@ -8,11 +8,11 @@ export class PublicFigureService extends BaseService {
 
   async getAll(query: GetPublicFiguresQuery) {
     const { sortBy = 'name', sortOrder = 'asc', filter = '' } = query;
-    const where: Prisma.PublicFigureWhereInput = filter
+    const where: Prisma.PersonWhereInput = filter
       ? {
           OR: [
-            { name: { contains: filter, mode: 'insensitive' } },
-            { role: { contains: filter, mode: 'insensitive' } },
+            { fullName: { contains: filter, mode: 'insensitive' } },
+            { currentRole: { contains: filter, mode: 'insensitive' } },
           ],
         }
       : {};
@@ -29,7 +29,7 @@ export class PublicFigureService extends BaseService {
     return this.repository.getById(id);
   }
 
-  async create(data: Prisma.PublicFigureCreateInput) {
+  async create(data: Prisma.PersonCreateInput) {
     // Explicitly set status to PENDING for user submissions
     // Admin submissions could be APPROVED automatically, but for now, everything is PENDING
     return this.repository.create({
