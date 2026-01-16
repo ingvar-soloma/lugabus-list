@@ -158,6 +158,34 @@ class ApiService {
     });
     return response.ok;
   }
+
+  /**
+   * Create a revision with evidence for a person
+   */
+  async createRevision(data: {
+    personId: string;
+    proposedData: Record<string, unknown>;
+    reason?: string;
+    evidences?: Array<{
+      url: string;
+      title?: string;
+      type?: 'LINK' | 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'VOTE_RECORD';
+      polarity?: 'SUPPORT' | 'REFUTE';
+    }>;
+  }): Promise<unknown> {
+    const response = await fetch(`${API_BASE_URL}/revisions`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create revision');
+    }
+
+    return response.json();
+  }
 }
 
 export const apiService = new ApiService();

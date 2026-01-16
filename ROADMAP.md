@@ -20,11 +20,11 @@
 - [x] DB: Оновлена схема Prisma (Person, Revision, User, Vote, Tag, Fundraising)
 - [x] DB: Підтримка `pg_trgm` розширення для Prisma (пошук)
 - [x] Core: Логіка Event Sourcing Lite (Ревізії) з полями для цитат та лінків
-- [ ] Core: Механізм затвердження ревізії (Snapshot update)
-- [ ] API: GET /persons/:id (актуальний стан)
-- [ ] API: GET /persons/:id/history (історія ревізій)
+- [x] Core: Механізм затвердження ревізії (Snapshot update)
+- [x] API: GET /persons/:id (актуальний стан)
+- [x] API: GET /persons/:id/history (історія ревізій)
 - [ ] **AI-Logic: Механізм прийняття рішень (AI-First)**
-  - [ ] Реалізація автоматичного апруву на основі AI-скорингу (>85 балів)
+  - [x] Реалізація автоматичного апруву на основі AI-скорингу (>85 балів)
   - [ ] Режим ручного перемикання (AI vs Moderator) з коментарем причини
 - [ ] Evidence: Валідація доказів (MEDIA, LINK, VOTE) та полярності (SUPPORT/REFUTE)
 - [ ] Storage: S3 сумісне сховище + Автоматична очистка метаданих (Sanitization/Sharp)

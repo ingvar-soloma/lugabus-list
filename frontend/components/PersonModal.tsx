@@ -1,4 +1,5 @@
 // React import removed because it was unused
+import { useState } from 'react';
 import { Person, PoliticalPosition } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -12,13 +13,15 @@ import {
   ShieldQuestion,
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
-
+import AddEvidenceModal from './AddEvidenceModal';
 interface PersonModalProps {
   person: Person | null;
   onClose: () => void;
 }
 
 const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
+  const [isAddEvidenceOpen, setIsAddEvidenceOpen] = useState(false);
+
   if (!person) return null;
 
   const handleVote = async (proofId: string, type: 'like' | 'dislike') => {
@@ -171,7 +174,10 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                       </div>
                     </div>
                   ))}
-                  <button className="w-full py-5 border border-dashed border-zinc-800 rounded-2xl text-zinc-600 hover:text-emerald-500 hover:border-emerald-500/50 transition-all font-black text-xs tracking-widest uppercase">
+                  <button
+                    onClick={() => setIsAddEvidenceOpen(true)}
+                    className="w-full py-5 border border-dashed border-zinc-800 rounded-2xl text-zinc-600 hover:text-emerald-500 hover:border-emerald-500/50 transition-all font-black text-xs tracking-widest uppercase"
+                  >
                     Запропонувати доказ
                   </button>
                 </div>
@@ -180,6 +186,13 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
           </div>
         </motion.div>
       </div>
+
+      <AddEvidenceModal
+        personId={person.id}
+        personName={person.name}
+        isOpen={isAddEvidenceOpen}
+        onClose={() => setIsAddEvidenceOpen(false)}
+      />
     </AnimatePresence>
   );
 };
