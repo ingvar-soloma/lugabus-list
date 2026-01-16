@@ -13,7 +13,6 @@ export class RevisionRepository extends BaseRepository {
         author: {
           select: {
             id: true,
-            username: true,
             reputation: true,
           },
         },
@@ -51,7 +50,7 @@ export class RevisionRepository extends BaseRepository {
       include: {
         evidences: true,
         author: {
-          select: { id: true, username: true, reputation: true },
+          select: { id: true, reputation: true },
         },
         person: {
           select: { id: true, fullName: true },
@@ -181,6 +180,25 @@ export class RevisionRepository extends BaseRepository {
         },
       });
 
+      // Anti-Abuse: Progressive Tracking & Shadow Ban Logic
+      const author = await tx.user.findUnique({
+        where: { id: revision.authorId },
+      });
+
+      if (author) {
+        const newViolationCount = author.violationCount + 1;
+        const shouldShadowBan = newViolationCount >= 3;
+
+        await tx.user.update({
+          where: { id: author.id },
+          data: {
+            violationCount: newViolationCount,
+            isShadowBanned: author.isShadowBanned || shouldShadowBan,
+            flaggedIp: revision.clientIp || author.flaggedIp,
+          },
+        });
+      }
+
       // Create audit log
       await tx.auditLog.create({
         data: {
@@ -190,6 +208,8 @@ export class RevisionRepository extends BaseRepository {
             revisionId: revision.id,
             personId: revision.personId,
             rejectionReason: reason,
+            violationCount: (author?.violationCount || 0) + 1,
+            shadowBanned: (author?.violationCount || 0) + 1 >= 3,
           },
         },
       });

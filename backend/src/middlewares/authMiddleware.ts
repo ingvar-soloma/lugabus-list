@@ -1,8 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-interface AuthRequest extends Request {
-  user?: string | jwt.JwtPayload;
+export interface UserPayload {
+  sub: string; // This is the pHash
+  role: string;
+}
+
+export interface AuthRequest extends Request {
+  user?: UserPayload;
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -17,7 +22,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
       if (err) {
         return res.sendStatus(403);
       }
-      (req as AuthRequest).user = user;
+      (req as AuthRequest).user = user as UserPayload;
       next();
     });
   } else {

@@ -1,6 +1,14 @@
 import { Router } from 'express';
 import { RevisionController } from '../controllers/revisionController';
 import { authMiddleware } from '../middlewares/authMiddleware';
+import { validate } from '../middlewares/validate';
+import {
+  createRevisionSchema,
+  approveRevisionSchema,
+  rejectRevisionSchema,
+  getRevisionByIdSchema,
+  getHistorySchema,
+} from '../models/schemas/revisionSchemas';
 
 const router = Router();
 const controller = new RevisionController();
@@ -17,40 +25,14 @@ const controller = new RevisionController();
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - personId
- *               - proposedData
- *             properties:
- *               personId:
- *                 type: string
- *                 format: uuid
- *               proposedData:
- *                 type: object
- *               reason:
- *                 type: string
- *               evidences:
- *                 type: array
- *                 items:
- *                   type: object
- *                   properties:
- *                     url:
- *                       type: string
- *                     title:
- *                       type: string
- *                     type:
- *                       type: string
- *                       enum: [LINK, IMAGE, DOCUMENT, VIDEO, VOTE_RECORD]
- *                     polarity:
- *                       type: string
- *                       enum: [SUPPORT, REFUTE]
+ *             $ref: '#/components/schemas/CreateRevisionRequest'
  *     responses:
  *       201:
  *         description: Revision created
  *       401:
  *         description: Unauthorized
  */
-router.post('/', authMiddleware, controller.create);
+router.post('/', authMiddleware, validate(createRevisionSchema), controller.create);
 
 /**
  * @swagger
@@ -92,7 +74,7 @@ router.get('/pending', authMiddleware, controller.getPending);
  *       404:
  *         description: Revision not found
  */
-router.get('/detail/:revisionId', controller.getById);
+router.get('/detail/:revisionId', validate(getRevisionByIdSchema), controller.getById);
 
 /**
  * @swagger
@@ -117,13 +99,20 @@ router.get('/detail/:revisionId', controller.getById);
  *               aiScore:
  *                 type: number
  *                 description: Optional AI score (0-100)
+ *               comment:
+ *                 type: string
  *     responses:
  *       200:
  *         description: Revision approved
  *       404:
  *         description: Revision not found
  */
-router.patch('/:revisionId/approve', authMiddleware, controller.approve);
+router.patch(
+  '/:revisionId/approve',
+  authMiddleware,
+  validate(approveRevisionSchema),
+  controller.approve,
+);
 
 /**
  * @swagger
@@ -151,7 +140,12 @@ router.patch('/:revisionId/approve', authMiddleware, controller.approve);
  *       200:
  *         description: Revision rejected
  */
-router.patch('/:revisionId/reject', authMiddleware, controller.reject);
+router.patch(
+  '/:revisionId/reject',
+  authMiddleware,
+  validate(rejectRevisionSchema),
+  controller.reject,
+);
 
 /**
  * @swagger
@@ -205,6 +199,6 @@ router.post('/:revisionId/ai-score', authMiddleware, controller.processWithAi);
  *       200:
  *         description: List of revisions for the person
  */
-router.get('/:personId', controller.getHistory);
+router.get('/:personId', validate(getHistorySchema), controller.getHistory);
 
 export default router;

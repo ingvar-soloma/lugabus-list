@@ -54,6 +54,8 @@ model Revision {
   // Докази до цієї конкретної ревізії
   evidences     Evidence[]
 
+  hashedIp      String?        // HMAC of client's IP (for Anti-Abuse)
+
   createdAt     DateTime       @default(now())
 }
 
@@ -89,31 +91,22 @@ model Vote {
 }
 
 model User {
-  id              String   @id @default(uuid())
+  id              String   @id // This is the pHash (HMAC of Telegram ID + Pepper)
 
-  // Fields required for AuthService
-  username        String?  @unique
-  password        String?
-  firstName       String?
-  lastName        String?
   role            UserRole @default(USER)
-  telegramId      BigInt?  @unique
-  photoUrl        String?
 
-  // Постійний анонімний ідентифікатор (для зв'язку з ревізіями)
-  // Герується як HMAC(TG_ID, PEPPER)
-  pHash           String   @unique
+  // Encrypted PII: { username, firstName, lastName, photoUrl, etc. }
+  encryptedData   String?
 
-  // Місячний ідентифікатор для відстеження аномалій
-  // HMAC(TG_ID, MONTHLY_SALT + PEPPER)
+  // Secondary hash for anomaly detection
   mHash           String?
 
-  // Для тіньового бану
+  // For shadow bans
   isShadowBanned  Boolean  @default(false)
   violationCount  Int      @default(0)
 
-  // Зберігаємо IP лише якщо користувач перейшов межу (наприклад, 5 порушень)
-  flaggedIp       String?
+  // Store hashed IP only if user is flagged for abuse
+  hashedFlaggedIp  String?
 
   reputation      Float    @default(10.0)
   createdAt       DateTime @default(now())

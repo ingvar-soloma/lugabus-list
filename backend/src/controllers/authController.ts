@@ -21,23 +21,10 @@ export class AuthController {
     }
   };
 
-  register = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const token = await this.authService.registerUser(req.body);
-      res.status(201).json({ token });
-    } catch (error) {
-      // Check if error is "Username already exists" and return 400 or 409
-      if (error instanceof Error && error.message === 'Username already exists') {
-        res.status(409).json({ message: error.message });
-      } else {
-        next(error);
-      }
-    }
-  };
-
   login = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const token = await this.authService.userLogin(req.body);
+      const { username, password } = req.body;
+      const token = await this.authService.login(username, password);
       if (token) {
         res.json({ token });
       } else {
@@ -49,7 +36,11 @@ export class AuthController {
   };
 
   me = async (req: Request, res: Response) => {
-    // This assumes user is attached to req by an auth middleware
-    res.json((req as AuthRequest).user);
+    // Return minimalistic user info from token payload attached by middleware
+    const user = (req as any).user;
+    res.json({
+      id: user.sub,
+      role: user.role,
+    });
   };
 }

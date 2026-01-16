@@ -3,7 +3,7 @@ import { PublicFigureService } from '../services/publicFigureService';
 import { GetPublicFiguresQuery } from '../models/types/publicFigureTypes';
 
 export class PublicFigureController {
-  private service = new PublicFigureService();
+  private readonly service = new PublicFigureService();
 
   getAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -40,6 +40,25 @@ export class PublicFigureController {
     try {
       const figure = await this.service.create(req.body);
       res.status(201).json(figure);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getOgImage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const person = await this.service.getById(req.params.id);
+      if (!person) {
+        res.status(404).json({ message: 'Person not found' });
+        return;
+      }
+
+      const ogImageService = new (require('../services/ogImageService').OgImageService)();
+      const buffer = await ogImageService.generatePersonCard(person);
+
+      res.set('Content-Type', 'image/png');
+      res.set('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      res.send(buffer);
     } catch (error) {
       next(error);
     }

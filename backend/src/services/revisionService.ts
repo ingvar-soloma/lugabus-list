@@ -1,3 +1,4 @@
+import { Status } from '@prisma/client';
 import { RevisionRepository } from '../repositories/revisionRepository';
 import { EvidenceRepository, CreateRevisionData } from '../repositories/evidenceRepository';
 import { BaseService } from './baseService';
@@ -13,10 +14,22 @@ export class RevisionService extends BaseService {
    * Create a new revision with evidence
    */
   async createRevision(data: CreateRevisionData) {
-    // Here we can add business logic, e.g., checking if user is allowed to edit
-    // or validating the proposedData against schema
+    // 1. Check user status (Shadow Ban Logic)
+    const user = await this.prisma.user.findUnique({
+      where: { id: data.authorId },
+    });
 
-    return this.evidenceRepository.createRevision(data);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // If shadow-banned, mark revision as REJECTED immediately, but return success to user
+    const status = user.isShadowBanned ? Status.REJECTED : Status.PENDING;
+
+    return this.evidenceRepository.createRevision({
+      ...data,
+      status,
+    });
   }
 
   /**
@@ -80,7 +93,6 @@ export class RevisionService extends BaseService {
 
   /**
    * Toggle AI vs Manual moderation mode
-   * This is a placeholder for future implementation
    */
   async setModerationMode(_revisionId: string, _mode: 'AI' | 'MANUAL', _reason?: string) {
     // TODO: Implement moderation mode toggle

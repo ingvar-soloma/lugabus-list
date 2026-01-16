@@ -38,6 +38,17 @@ services:
     networks:
       - lugabus-net
 
+  minio:
+    image: minio/minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin123}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - lugabus-net
+
 networks:
   lugabus-net:
     driver: bridge
@@ -45,3 +56,4 @@ networks:
 volumes:
   postgres-data:
   redis-data:
+  minio-data:

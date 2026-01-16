@@ -85,5 +85,6 @@ router.get('/:id', validate(getPublicFigureByIdSchema), figureController.getById
  *         description: List of revisions for the person
  */
 router.get('/:id/history', revisionController.getHistory);
+router.get('/:id/og', figureController.getOgImage);
 
 export default router;

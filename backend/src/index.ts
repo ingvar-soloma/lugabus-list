@@ -27,6 +27,9 @@ process.on('unhandledRejection', (reason, promise) => {
 
 app.use(helmet());
 
+import { redisClient } from './config/redis';
+import { RedisStore } from 'rate-limit-redis';
+
 // Security: Enable rate limiting to prevent brute-force attacks
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -34,6 +37,9 @@ const limiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: 'Too many requests from this IP, please try again after 15 minutes',
+  store: new RedisStore({
+    sendCommand: (...args: string[]) => redisClient.sendCommand(args),
+  }),
 });
 
 // Apply the rate limiting middleware to all requests
@@ -59,6 +65,9 @@ app.use(
   }),
 );
 app.use(express.json());
+
+import { maskSensitiveData } from './middlewares/logMasking';
+app.use(maskSensitiveData);
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 

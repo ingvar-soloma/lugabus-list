@@ -43,3 +43,8 @@ services:
   redis:
     ports:
       - '6379:6379' # Expose DB port for local development tools (DBeaver, etc.)
+
+  minio:
+    ports:
+      - '9000:9000'
+      - '9001:9001'

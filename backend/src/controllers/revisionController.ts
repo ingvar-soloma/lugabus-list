@@ -3,7 +3,7 @@ import { RevisionService } from '../services/revisionService';
 import { CreateRevisionData } from '../repositories/evidenceRepository';
 
 export class RevisionController {
-  private service = new RevisionService();
+  private readonly service = new RevisionService();
 
   /**
    * POST /revisions
@@ -11,12 +11,23 @@ export class RevisionController {
    */
   create = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // TODO: Extract authorId from auth middleware
-      const authorId = '00000000-0000-0000-0000-000000000000'; // Mock for now
+      const user = (req as any).user;
+      const authorId = user?.sub;
+
+      if (!authorId) {
+        res.status(401).json({ message: 'Unauthorized: User ID (sub) missing from token' });
+        return;
+      }
+
+      const pepper = process.env.IP_PEPPER || 'default-ip-pepper';
+      const ip = req.ip || 'unknown';
+      const { hashIp } = await import('../utils/crypto');
+      const hashedIp = hashIp(ip, pepper);
 
       const revisionData: CreateRevisionData = {
         ...req.body,
         authorId,
+        hashedIp,
       };
 
       const revision = await this.service.createRevision(revisionData);
@@ -130,7 +141,7 @@ export class RevisionController {
 
       const result = await this.service.processWithAiScore(revisionId, aiScore, autoApprove);
 
-      const wasAutoApproved = result && 'status' in result && result.status === 'APPROVED';
+      const wasAutoApproved = result && 'status' in result && (result as any).status === 'APPROVED';
       res.json({
         message: wasAutoApproved
           ? 'Revision auto-approved by AI'
