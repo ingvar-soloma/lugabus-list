@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PublicFigureService } from '../services/publicFigureService';
 import { GetPublicFiguresQuery } from '../models/types/publicFigureTypes';
+import { OgImageService } from '../services/ogImageService';
 
 export class PublicFigureController {
   private readonly service = new PublicFigureService();
@@ -53,7 +54,7 @@ export class PublicFigureController {
         return;
       }
 
-      const ogImageService = new (require('../services/ogImageService').OgImageService)();
+      const ogImageService = new OgImageService();
       const buffer = await ogImageService.generatePersonCard(person);
 
       res.set('Content-Type', 'image/png');

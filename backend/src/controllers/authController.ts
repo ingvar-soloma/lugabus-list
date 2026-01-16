@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/authService';
 
 interface AuthRequest extends Request {
-  user?: unknown;
+  user?: {
+    sub: string;
+    role: string;
+  };
 }
 
 export class AuthController {
@@ -35,9 +38,13 @@ export class AuthController {
     }
   };
 
-  me = async (req: Request, res: Response) => {
+  me = async (req: AuthRequest, res: Response) => {
     // Return minimalistic user info from token payload attached by middleware
-    const user = (req as any).user;
+    const user = req.user;
+    if (!user) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
     res.json({
       id: user.sub,
       role: user.role,

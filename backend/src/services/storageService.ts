@@ -2,7 +2,6 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import sharp from 'sharp';
 import crypto from 'node:crypto';
-import path from 'node:path';
 import logger from '../config/logger';
 
 export class StorageService {

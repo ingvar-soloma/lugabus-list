@@ -1,6 +1,5 @@
 import { prisma } from '../repositories/baseRepository';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 import { encryptJson } from '../utils/crypto';
 import { StorageService } from './storageService';
@@ -13,7 +12,7 @@ export class AuthService {
    * Refactored login to use pHash for lookup or only allow Telegram login.
    * If admin login is still needed via username/password, we search for pHash of username.
    */
-  async login(username: string, password: string): Promise<string | null> {
+  async login(username: string, _password: string): Promise<string | null> {
     const pHash = this.generatePHash(username);
     const user = await prisma.user.findUnique({
       where: {

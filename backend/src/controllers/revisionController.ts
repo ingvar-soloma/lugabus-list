@@ -2,6 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { RevisionService } from '../services/revisionService';
 import { CreateRevisionData } from '../repositories/evidenceRepository';
 
+interface UserPayload {
+  sub: string;
+  role: string;
+}
+
+interface AuthRequest extends Request {
+  user?: UserPayload;
+}
+
 export class RevisionController {
   private readonly service = new RevisionService();
 
@@ -9,9 +18,9 @@ export class RevisionController {
    * POST /revisions
    * Create a new revision for a person
    */
-  create = async (req: Request, res: Response, next: NextFunction) => {
+  create = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user;
+      const user = req.user;
       const authorId = user?.sub;
 
       if (!authorId) {
@@ -141,7 +150,7 @@ export class RevisionController {
 
       const result = await this.service.processWithAiScore(revisionId, aiScore, autoApprove);
 
-      const wasAutoApproved = result && (result as any).status === 'APPROVED';
+      const wasAutoApproved = result && 'status' in result && result.status === 'APPROVED';
       res.json({
         message: wasAutoApproved
           ? 'Revision auto-approved by AI'
@@ -158,10 +167,10 @@ export class RevisionController {
    * POST /revisions/:revisionId/vote
    * Vote to increase AI processing priority for a revision
    */
-  vote = async (req: Request, res: Response, next: NextFunction) => {
+  vote = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { revisionId } = req.params;
-      const user = (req as any).user;
+      const user = req.user;
       const userPHash = user?.sub;
 
       if (!userPHash) {
@@ -172,10 +181,10 @@ export class RevisionController {
       const result = await this.service.voteForRevision(revisionId, userPHash);
       res.json({
         message: 'Vote recorded successfully',
-        priorityScore: (result as any).priorityScore,
+        priorityScore: result.priorityScore,
       });
     } catch (error) {
-      if ((error as any).code === 'P2002') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
         res.status(400).json({ error: 'You have already voted for this revision' });
         return;
       }
@@ -187,9 +196,9 @@ export class RevisionController {
    * POST /admin/revisions/process-batch
    * Manually trigger AI processing for top-prioritized revisions (Admin Only)
    */
-  processBatch = async (req: Request, res: Response, next: NextFunction) => {
+  processBatch = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user;
+      const user = req.user;
       if (user?.role !== 'ADMIN') {
         res.status(403).json({ error: 'Forbidden: Admin role required' });
         return;

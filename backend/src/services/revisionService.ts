@@ -101,9 +101,9 @@ export class RevisionService extends BaseService {
         const aiScore = Math.floor(Math.random() * 100);
 
         // Use existing logic to finalize (auto-approve or queue for manual)
-        const result = await this.processWithAiScore(revision.id, aiScore);
+        await this.processWithAiScore(revision.id, aiScore);
         results.push({ id: revision.id, success: true, aiScore });
-      } catch (error) {
+      } catch {
         // If it fails, revert status to QUEUED_FOR_AI so it can be retried
         await this.repository.updateStatus([revision.id], Status.QUEUED_FOR_AI);
         results.push({ id: revision.id, success: false, error: 'AI processing failed' });
