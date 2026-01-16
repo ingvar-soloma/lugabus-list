@@ -49,3 +49,14 @@ export const rejectRevisionSchema = z.object({
     reason: z.string().min(1).max(500),
   }),
 });
+export const voteSchema = z.object({
+  params: z.object({
+    revisionId: z.string().uuid(),
+  }),
+});
+
+export const processBatchSchema = z.object({
+  body: z.object({
+    limit: z.number().int().positive().default(10),
+  }),
+});

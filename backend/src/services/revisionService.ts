@@ -72,11 +72,55 @@ export class RevisionService extends BaseService {
   }
 
   /**
+   * Vote for a revision to be processed by AI
+   */
+  async voteForRevision(revisionId: string, userPHash: string) {
+    return this.repository.voteForRevision(revisionId, userPHash);
+  }
+
+  /**
+   * Process a batch of queued revisions (Admin Action)
+   */
+  async processAdminBatch(limit: number) {
+    // 1. Get top prioritized revisions
+    const revisions = await this.repository.getQueuedForBatch(limit);
+    const ids = revisions.map((r) => r.id);
+
+    if (ids.length === 0) {
+      return { processed: 0, results: [] };
+    }
+
+    // 2. Lock them for processing
+    await this.repository.updateStatus(ids, Status.PROCESSING);
+
+    const results = [];
+    for (const revision of revisions) {
+      try {
+        // Here we simulate AI scoring logic
+        // In a real app, this might call an external LLM/AI API
+        const aiScore = Math.floor(Math.random() * 100);
+
+        // Use existing logic to finalize (auto-approve or queue for manual)
+        const result = await this.processWithAiScore(revision.id, aiScore);
+        results.push({ id: revision.id, success: true, aiScore });
+      } catch (error) {
+        // If it fails, revert status to QUEUED_FOR_AI so it can be retried
+        await this.repository.updateStatus([revision.id], Status.QUEUED_FOR_AI);
+        results.push({ id: revision.id, success: false, error: 'AI processing failed' });
+      }
+    }
+
+    return {
+      processed: results.length,
+      successCount: results.filter((r) => r.success).length,
+      errorCount: results.filter((r) => !r.success).length,
+      results,
+    };
+  }
+
+  /**
    * Process revision with AI scoring
    * If AI score > threshold, auto-approve; otherwise, queue for moderation
-   * @param revisionId - ID of the revision to process
-   * @param aiScore - AI-generated score (0-100)
-   * @param autoApprove - Whether to auto-approve if score > threshold
    */
   async processWithAiScore(revisionId: string, aiScore: number, autoApprove = true) {
     // Update the AI score
@@ -87,8 +131,9 @@ export class RevisionService extends BaseService {
       return this.approveRevision(revisionId, aiScore);
     }
 
-    // Otherwise, return the revision for manual moderation
-    return this.getById(revisionId);
+    // If not auto-approved, it stays in PENDING or REJECTED depending on scoring logic
+    // For now, if it fails AI, we mark it as PENDING (manual review)
+    return this.repository.updateStatus([revisionId], Status.PENDING);
   }
 
   /**
@@ -96,7 +141,6 @@ export class RevisionService extends BaseService {
    */
   async setModerationMode(_revisionId: string, _mode: 'AI' | 'MANUAL', _reason?: string) {
     // TODO: Implement moderation mode toggle
-    // This would store the mode choice and reason in AuditLog
     throw new Error('Not implemented yet');
   }
 }

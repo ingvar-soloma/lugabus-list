@@ -23,17 +23,39 @@ export class StorageService {
   }
 
   /**
-   * Sanitizes and uploads an image to S3
-   * Roadmap: Sanitization/Sharp (clearing metadata)
+   * Validates file buffer using file-type
    */
-  async uploadImage(buffer: Buffer, originalName: string, folder = 'uploads'): Promise<string> {
+  private async validateMimeType(
+    buffer: Buffer,
+    expectedCategory: 'image' | 'any',
+  ): Promise<{ mime: string; ext: string }> {
+    const { fromBuffer } = await import('file-type');
+    const type = await fromBuffer(buffer);
+
+    if (!type) {
+      throw new Error('Could not determine file type');
+    }
+
+    if (expectedCategory === 'image' && !type.mime.startsWith('image/')) {
+      throw new Error('File is not a valid image');
+    }
+
+    return type;
+  }
+
+  /**
+   * Sanitizes and uploads an image to S3
+   */
+  async uploadImage(buffer: Buffer, _originalName: string, folder = 'uploads'): Promise<string> {
     try {
-      // 1. Sanitize image with Sharp
-      // - Convert to WebP for better compression
-      // - Strip metadata (EXIF, etc.) to ensure privacy
-      // - Resize if needed (e.g., max 1200px width/height)
+      // 1. Validate real MIME type
+      await this.validateMimeType(buffer, 'image');
+
+      // 2. Sanitize image with Sharp
+      // - rotate() saves orientation before stripping EXIF
+      // - webp() strips metadata and compresses
       const sanitizedBuffer = await sharp(buffer)
-        .rotate() // Auto-rotate based on EXIF before stripping it
+        .rotate()
         .resize(1200, 1200, {
           fit: 'inside',
           withoutEnlargement: true,
@@ -41,12 +63,12 @@ export class StorageService {
         .webp({ quality: 80 })
         .toBuffer();
 
-      // 2. Generate unique filename
+      // 3. Generate unique anonymized filename
       const hash = crypto.randomBytes(16).toString('hex');
       const filename = `${hash}.webp`;
       const key = `${folder}/${filename}`;
 
-      // 3. Upload to S3
+      // 4. Upload to S3
       const upload = new Upload({
         client: this.client,
         params: {
@@ -54,42 +76,43 @@ export class StorageService {
           Key: key,
           Body: sanitizedBuffer,
           ContentType: 'image/webp',
-          ACL: 'public-read', // Depends on your S3 config
+          ACL: 'public-read',
         },
       });
 
       await upload.done();
-
-      // 4. Return the public URL
-      // If using Minio locally, this needs to be accessible from frontend
-      // In prod, this would be a CloudFront/CDN URL
-      const publicUrl = `${process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT}/${this.bucket}/${key}`;
-      return publicUrl;
+      return `${process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT}/${this.bucket}/${key}`;
     } catch (error) {
       logger.error('Failed to upload image', error);
-      throw new Error('Image upload failed');
+      throw new Error(error instanceof Error ? error.message : 'Image upload failed');
     }
   }
 
   async uploadFile(
     buffer: Buffer,
-    filename: string,
-    contentType: string,
+    _filename: string, // Unused for security (we anonymize)
+    _claimedContentType: string, // Unused for security (we validate)
     folder = 'documents',
   ): Promise<string> {
-    const ext = path.extname(filename);
-    const hash = crypto.randomBytes(16).toString('hex');
-    const safeName = `${hash}${ext}`;
-    const key = `${folder}/${safeName}`;
+    try {
+      const type = await this.validateMimeType(buffer, 'any');
 
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType,
-    });
+      const hash = crypto.randomBytes(16).toString('hex');
+      const safeName = `${hash}.${type.ext}`;
+      const key = `${folder}/${safeName}`;
 
-    await this.client.send(command);
-    return `${process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT}/${this.bucket}/${key}`;
+      const command = new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: type.mime,
+      });
+
+      await this.client.send(command);
+      return `${process.env.S3_PUBLIC_URL || process.env.S3_ENDPOINT}/${this.bucket}/${key}`;
+    } catch (error) {
+      logger.error('Failed to upload file', error);
+      throw new Error(error instanceof Error ? error.message : 'File upload failed');
+    }
   }
 }

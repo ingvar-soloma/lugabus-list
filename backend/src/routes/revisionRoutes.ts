@@ -8,6 +8,7 @@ import {
   rejectRevisionSchema,
   getRevisionByIdSchema,
   getHistorySchema,
+  voteSchema,
 } from '../models/schemas/revisionSchemas';
 
 const router = Router();
@@ -200,5 +201,24 @@ router.post('/:revisionId/ai-score', authMiddleware, controller.processWithAi);
  *         description: List of revisions for the person
  */
 router.get('/:personId', validate(getHistorySchema), controller.getHistory);
+
+/**
+ * @swagger
+ * /revisions/{revisionId}/vote:
+ *   post:
+ *     summary: Vote to increase AI processing priority for a revision
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: revisionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Vote recorded
+ */
+router.post('/:revisionId/vote', authMiddleware, validate(voteSchema), controller.vote);
 
 export default router;

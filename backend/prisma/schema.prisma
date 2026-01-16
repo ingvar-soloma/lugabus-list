@@ -56,7 +56,21 @@ model Revision {
 
   hashedIp      String?        // HMAC of client's IP (for Anti-Abuse)
 
-  createdAt     DateTime       @default(now())
+  priorityScore  Int            @default(0)
+  aiVotes        AiVote[]
+
+  createdAt      DateTime       @default(now())
+}
+
+model AiVote {
+  id            String   @id @default(uuid())
+  revisionId    String
+  revision      Revision @relation(fields: [revisionId], references: [id])
+  userId        String   // pHash of the user
+  user          User     @relation(fields: [userId], references: [id])
+
+  createdAt     DateTime @default(now())
+  @@unique([userId, revisionId])
 }
 
 // Докази (Медіа, Посилання, Документи)
@@ -113,6 +127,7 @@ model User {
 
   revisions       Revision[]
   votes           Vote[]
+  aiVotes         AiVote[]
   auditLogs       AuditLog[]
 }
 
@@ -133,6 +148,8 @@ model AuditLog {
 
 enum Status {
   PENDING
+  QUEUED_FOR_AI
+  PROCESSING
   APPROVED
   REJECTED
   ARCHIVED

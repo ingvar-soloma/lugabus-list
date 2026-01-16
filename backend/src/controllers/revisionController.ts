@@ -141,13 +141,66 @@ export class RevisionController {
 
       const result = await this.service.processWithAiScore(revisionId, aiScore, autoApprove);
 
-      const wasAutoApproved = result && 'status' in result && (result as any).status === 'APPROVED';
+      const wasAutoApproved = result && (result as any).status === 'APPROVED';
       res.json({
         message: wasAutoApproved
           ? 'Revision auto-approved by AI'
           : 'Revision scored, pending manual review',
         revision: result,
         autoApproved: wasAutoApproved,
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  /**
+   * POST /revisions/:revisionId/vote
+   * Vote to increase AI processing priority for a revision
+   */
+  vote = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { revisionId } = req.params;
+      const user = (req as any).user;
+      const userPHash = user?.sub;
+
+      if (!userPHash) {
+        res.status(401).json({ error: 'Unauthorized: User sub missing' });
+        return;
+      }
+
+      const result = await this.service.voteForRevision(revisionId, userPHash);
+      res.json({
+        message: 'Vote recorded successfully',
+        priorityScore: (result as any).priorityScore,
+      });
+    } catch (error) {
+      if ((error as any).code === 'P2002') {
+        res.status(400).json({ error: 'You have already voted for this revision' });
+        return;
+      }
+      next(error);
+    }
+  };
+
+  /**
+   * POST /admin/revisions/process-batch
+   * Manually trigger AI processing for top-prioritized revisions (Admin Only)
+   */
+  processBatch = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = (req as any).user;
+      if (user?.role !== 'ADMIN') {
+        res.status(403).json({ error: 'Forbidden: Admin role required' });
+        return;
+      }
+
+      const limit = req.body.limit || 10;
+      const report = await this.service.processAdminBatch(limit);
+
+      res.json({
+        message: `Processed batch of ${report.processed} revisions`,
+        report,
       });
     } catch (error) {
       next(error);

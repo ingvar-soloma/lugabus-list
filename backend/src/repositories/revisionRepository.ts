@@ -32,7 +32,6 @@ export class RevisionRepository extends BaseRepository {
         author: {
           select: {
             id: true,
-            username: true,
             reputation: true,
           },
         },
@@ -194,7 +193,7 @@ export class RevisionRepository extends BaseRepository {
           data: {
             violationCount: newViolationCount,
             isShadowBanned: author.isShadowBanned || shouldShadowBan,
-            flaggedIp: revision.clientIp || author.flaggedIp,
+            hashedFlaggedIp: revision.hashedIp || author.hashedFlaggedIp,
           },
         });
       }
@@ -225,6 +224,79 @@ export class RevisionRepository extends BaseRepository {
     return this.prisma.revision.update({
       where: { id: revisionId },
       data: { aiScore },
+    });
+  }
+
+  /**
+   * Vote for a revision to be processed by AI
+   */
+  async voteForRevision(revisionId: string, userId: string) {
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Check if revision exists and is in a votable status
+      const revision = await tx.revision.findUnique({
+        where: { id: revisionId },
+      });
+
+      if (!revision) throw new Error('Revision not found');
+      if (![Status.PENDING, Status.QUEUED_FOR_AI].includes(revision.status)) {
+        throw new Error('Revision is not in a votable state');
+      }
+
+      // 2. Create the vote (will fail if exists due to unique constraint)
+      await tx.aiVote.create({
+        data: {
+          revisionId,
+          userId,
+        },
+      });
+
+      // 3. Atomically increment priority and ensure status is QUEUED_FOR_AI
+      return tx.revision.update({
+        where: { id: revisionId },
+        data: {
+          priorityScore: { increment: 1 },
+          status: Status.QUEUED_FOR_AI,
+        },
+      });
+    });
+  }
+
+  /**
+   * Get revisions queued for AI processing, sorted by priority
+   */
+  async getQueuedForBatch(limit: number) {
+    return this.prisma.revision.findMany({
+      where: { status: Status.QUEUED_FOR_AI },
+      orderBy: [{ priorityScore: 'desc' }, { createdAt: 'asc' }],
+      take: limit,
+    });
+  }
+
+  /**
+   * Batch update revision status (e.g., to PROCESSING)
+   */
+  async updateStatus(ids: string[], status: Status) {
+    return this.prisma.revision.updateMany({
+      where: { id: { in: ids } },
+      data: { status },
+    });
+  }
+
+  /**
+   * IP Retention Policy: Wipe hashedIp for revisions older than 30 days.
+   */
+  async cleanupExpiredIps() {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    return this.prisma.revision.updateMany({
+      where: {
+        createdAt: { lt: thirtyDaysAgo },
+        hashedIp: { not: null },
+      },
+      data: {
+        hashedIp: null,
+      },
     });
   }
 }
