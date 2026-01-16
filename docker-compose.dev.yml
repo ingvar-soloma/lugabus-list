@@ -1,20 +1,36 @@
 services:
   frontend:
+    build:
+      target: build-stage
+    user: root
     ports:
       - '3000:3000'
     volumes:
       - ./frontend:/usr/src/app/frontend
+      - ./package.json:/usr/src/app/package.json
+      - ./pnpm-lock.yaml:/usr/src/app/pnpm-lock.yaml
+      - ./pnpm-workspace.yaml:/usr/src/app/pnpm-workspace.yaml
       - /usr/src/app/node_modules
-    working_dir: /usr/src/app/frontend
-    command: sh -c "corepack enable && pnpm install && pnpm run dev"
+    working_dir: /usr/src/app
+    command: sh -c "corepack enable && pnpm install --frozen-lockfile && cd frontend && pnpm run dev --host"
 
   backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile.dev
+    user: root
     # In dev, we mount the local source code to enable hot-reloading
     volumes:
-      - ./backend:/usr/src/app
+      - ./backend:/usr/src/app/backend
+      - ./package.json:/usr/src/app/package.json
+      - ./pnpm-lock.yaml:/usr/src/app/pnpm-lock.yaml
+      - ./pnpm-workspace.yaml:/usr/src/app/pnpm-workspace.yaml
       - /usr/src/app/node_modules
+      - /usr/src/app/backend/node_modules
+    working_dir: /usr/src/app/backend
     # Use nodemon for development (requires 'dev' script in package.json)
-    command: sh -c "CI=true pnpm install && npx prisma generate && pnpm run dev"
+    # We install dependencies at root first
+    command: sh -c "pnpm install --frozen-lockfile && npx prisma generate && pnpm run dev"
     ports:
       - '8080:8080'
     depends_on:

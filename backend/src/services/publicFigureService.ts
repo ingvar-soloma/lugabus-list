@@ -7,7 +7,7 @@ export class PublicFigureService extends BaseService {
   private readonly repository = new PublicFigureRepository();
 
   async getAll(query: GetPublicFiguresQuery) {
-    const { sortBy = 'name', sortOrder = 'asc', filter = '' } = query;
+    const { sortBy = 'fullName', sortOrder = 'asc', filter = '' } = query;
     const where: Prisma.PersonWhereInput = filter
       ? {
           OR: [

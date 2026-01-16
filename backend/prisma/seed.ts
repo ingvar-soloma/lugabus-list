@@ -1,8 +1,5 @@
-import { PrismaClient, Status } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
-console.log('Seeding data...');
+import { Status } from '@prisma/client';
+import { prisma } from '../src/repositories/baseRepository';
 
 const figures = [
   {
@@ -28,7 +25,9 @@ const figures = [
   },
 ];
 
-try {
+async function main() {
+  console.log('Seeding data...');
+
   for (const figure of figures) {
     const existing = await prisma.person.findFirst({
       where: { fullName: figure.name },
@@ -48,9 +47,13 @@ try {
   }
 
   console.log('Seeding completed!');
-} catch (e) {
-  console.error(e);
-  process.exit(1);
-} finally {
-  await prisma.$disconnect();
 }
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

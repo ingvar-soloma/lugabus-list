@@ -13,6 +13,18 @@ import swaggerSpec from './config/swagger';
 const app = express();
 const port = process.env.PORT || 8080;
 
+logger.info('Starting server initialization...');
+
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
 app.use(helmet());
 
 // Security: Enable rate limiting to prevent brute-force attacks

@@ -26,6 +26,7 @@ model Person {
   revisions     Revision[]
   tags          Tag[]
   votes         Vote[]
+  fundraisings  Fundraising[]
 
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -161,4 +162,34 @@ enum UserRole {
   USER
   MODERATOR
   ADMIN
+}
+
+// Збори коштів (Monobank, PayPal, Crypto etc)
+model Fundraising {
+  id              String             @id @default(uuid())
+  personId        String
+  person          Person             @relation(fields: [personId], references: [id])
+
+  title           String
+  description     String?            @db.Text
+  targetAmount    Float?
+  collectedAmount Float?             @default(0.0)
+  currency        String             @default("UAH")
+
+  provider        FundraisingProvider @default(OTHER)
+  link            String
+
+  isVerified      Boolean            @default(false)
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+}
+
+enum FundraisingProvider {
+  MONOBANK
+  PAYPAL
+  PATREON
+  BUYMEACOFFEE
+  CRYPTO
+  OTHER
 }
