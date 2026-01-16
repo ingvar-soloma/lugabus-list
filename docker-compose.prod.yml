@@ -1,7 +1,8 @@
 services:
   frontend:
-    # In production, we assume standard 'pnpm run dev' for now
-    command: sh -c "corepack enable && pnpm install && pnpm run dev"
+    # In production, we use the build defined in docker-compose.yml (Nginx)
+    ports:
+      - '80:80'
     restart: always
 
   backend:

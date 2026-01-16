@@ -1,14 +1,10 @@
 services:
   frontend:
-    image: node:22
-    working_dir: /app
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     environment:
       VITE_TELEGRAM_BOT_NAME: ${VITE_TELEGRAM_BOT_NAME}
-    # We mount volumes here because there is no frontend Dockerfile to build the image with code.
-    # In a proper production setup, you should add a Dockerfile for frontend too.
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
     networks:
       - lugabus-net
 
