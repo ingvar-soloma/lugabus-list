@@ -43,8 +43,12 @@ WORKDIR /prod/backend
 # Copy prisma folder from the source (since it might not be in 'files' or might be needed for generate)
 # We copy it from the previous WORKDIR location
 RUN cp -r /usr/src/app/backend/prisma ./prisma
+# Install prisma cli temporarily to allow parsing prisma.config.ts
+RUN pnpm add -D prisma
 # Generate client again in the prod node_modules
 RUN echo 'DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"' > .env && npx prisma generate
+# Remove prisma cli to keep image small
+RUN pnpm prune --prod
 # Remove the dummy .env
 RUN rm .env
 

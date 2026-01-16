@@ -1,20 +1,23 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../repositories/baseRepository';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 
-const prisma = new PrismaClient();
-
 export class AuthService {
   async login(username: string, password: string): Promise<string | null> {
-    const admin = await prisma.admin.findUnique({ where: { username } });
+    const user = await prisma.user.findFirst({
+      where: {
+        username,
+        role: 'ADMIN', // Only allow admins to login via this method if intended for admin panel
+      },
+    });
 
-    if (admin && (await bcrypt.compare(password, admin.password))) {
+    if (user?.password && (await bcrypt.compare(password, user.password))) {
       const secret = process.env.JWT_SECRET;
       if (!secret) {
         throw new Error('JWT_SECRET is not defined');
       }
-      return jwt.sign({ id: admin.id, username: admin.username, role: 'ADMIN' }, secret, {
+      return jwt.sign({ id: user.id, username: user.username, role: user.role }, secret, {
         expiresIn: '1h',
       });
     }
@@ -34,6 +37,13 @@ export class AuthService {
     const hashedPassword = data.password ? await bcrypt.hash(data.password, 10) : undefined;
     if (!hashedPassword) throw new Error('Password required');
 
+    // Generate a random pHash for username/password based users since they don't have a Telegram ID
+    // pHash is required by Schema
+    const pHash = crypto
+      .createHmac('sha256', process.env.HASH_PEPPER || 'default-pepper')
+      .update(data.username)
+      .digest('hex');
+
     const user = await prisma.user.create({
       data: {
         username: data.username,
@@ -41,6 +51,7 @@ export class AuthService {
         firstName: data.firstName,
         lastName: data.lastName,
         role: 'USER',
+        pHash: pHash,
       },
     });
 
@@ -117,6 +128,11 @@ export class AuthService {
         firstName: userData.first_name,
         lastName: userData.last_name,
         photoUrl: userData.photo_url,
+        // Generate pHash based on telegramId for consistency
+        pHash: crypto
+          .createHmac('sha256', process.env.HASH_PEPPER || 'default-pepper')
+          .update(userData.id.toString())
+          .digest('hex'),
       },
     });
 

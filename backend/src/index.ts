@@ -1,17 +1,29 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit'; // Security: Rate limiting
-import dotenv from 'dotenv';
 import routes from './routes';
 import logger from './config/logger';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger';
 
-dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 8080;
+
+logger.info('Starting server initialization...');
+
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
 
 app.use(helmet());
 
