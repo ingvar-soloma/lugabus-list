@@ -1,13 +1,33 @@
-import { Status } from '@prisma/client';
+import { Status, Person, Revision, Evidence } from '@prisma/client';
 import { BaseRepository } from './baseRepository';
 
+type PersonWithRevisions = Person & {
+  revisions: (Revision & {
+    evidences: Evidence[];
+  })[];
+};
+
+interface MappedProof {
+  id: string;
+  text: string;
+  sourceUrl: string | null;
+  type: string;
+  date: string;
+  likes: number;
+  dislikes: number;
+  status: string;
+}
+
+interface MappedHistory {
+  id: string;
+  date: string;
+  title: string;
+  description: string;
+  position: string;
+}
+
 export class PublicFigureRepository extends BaseRepository {
-  async getAll(options: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    where?: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    orderBy?: any;
-  }) {
+  async getAll(options: { where?: object; orderBy?: object }) {
     const figures = await this.prisma.person.findMany({
       ...options,
       include: {
@@ -18,7 +38,7 @@ export class PublicFigureRepository extends BaseRepository {
       },
     });
 
-    return figures.map((f) => this.mapToPerson(f));
+    return (figures as PersonWithRevisions[]).map((f) => this.mapToPerson(f));
   }
 
   async getById(id: string) {
@@ -31,7 +51,7 @@ export class PublicFigureRepository extends BaseRepository {
         },
       },
     });
-    return figure ? this.mapToPerson(figure) : null;
+    return figure ? this.mapToPerson(figure as PersonWithRevisions) : null;
   }
 
   async getRawById(id: string) {
@@ -40,8 +60,7 @@ export class PublicFigureRepository extends BaseRepository {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private mapToPerson(figure: any) {
+  private mapToPerson(figure: PersonWithRevisions) {
     let position = 'NEUTRAL';
     if (figure.reputation > 0) {
       position = 'SUPPORT';
@@ -50,11 +69,9 @@ export class PublicFigureRepository extends BaseRepository {
     }
 
     // Collect all evidences from all approved revisions
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const allEvidences =
-      figure.revisions?.flatMap((rev: any) =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (rev.evidences || []).map((ev: any) => ({
+    const allEvidences: MappedProof[] =
+      figure.revisions?.flatMap((rev) =>
+        (rev.evidences || []).map((ev) => ({
           id: ev.id,
           text: ev.title || rev.reason || 'Доказ без опису',
           sourceUrl: ev.url,
@@ -67,9 +84,8 @@ export class PublicFigureRepository extends BaseRepository {
       ) || [];
 
     // Map revisions to history timeline
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const history =
-      figure.revisions?.map((rev: any) => ({
+    const history: MappedHistory[] =
+      figure.revisions?.map((rev) => ({
         id: rev.id,
         date: rev.createdAt.toISOString().split('T')[0],
         title: rev.reason || 'Оновлення профілю',
@@ -88,7 +104,7 @@ export class PublicFigureRepository extends BaseRepository {
       proofsCount: allEvidences.length,
       lastUpdated: figure.updatedAt.toISOString().split('T')[0],
       proofs: allEvidences,
-      history: history.sort((a: any, b: any) => b.date.localeCompare(a.date)),
+      history: history.sort((a, b) => b.date.localeCompare(a.date)),
     };
   }
 
@@ -99,15 +115,20 @@ export class PublicFigureRepository extends BaseRepository {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async create(data: any) {
+  async create(data: {
+    fullName: string;
+    currentRole: string;
+    bio: string;
+    reputation?: number;
+    status?: Status;
+  }) {
     return this.prisma.person.create({
       data: {
         fullName: data.fullName,
         currentRole: data.currentRole,
         bio: data.bio,
         reputation: data.reputation || 0,
-        status: data.status || 'PENDING',
+        status: data.status || Status.PENDING,
       },
     });
   }

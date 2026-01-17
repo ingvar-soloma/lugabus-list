@@ -2,6 +2,13 @@ import { PublicFigureRepository } from '../repositories/publicFigureRepository';
 import { GetPublicFiguresQuery } from '../models/types/publicFigureTypes';
 import { BaseService } from './baseService';
 
+interface CreatePersonDTO {
+  name: string;
+  role: string;
+  statement: string;
+  rating?: number;
+}
+
 export class PublicFigureService extends BaseService {
   private readonly repository = new PublicFigureRepository();
 
@@ -32,8 +39,7 @@ export class PublicFigureService extends BaseService {
     return this.repository.getRawById(id);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  async create(data: any) {
+  async create(data: CreatePersonDTO) {
     // Map request body (name, role, statement, rating) to database fields (fullName, currentRole, bio, reputation)
     const personData = {
       fullName: data.name,
