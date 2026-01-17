@@ -88,9 +88,9 @@ async function main() {
     const { evidence, ...personData } = fig;
 
     const person = await prisma.person.upsert({
-      where: { id: `seed-${personData.fullName.replaceAll(/\s+/g, '-').toLowerCase()}` }, // Stable ID for seeding
+      where: { id: `seed-${personData.fullName.replace(/\s+/g, '-').toLowerCase()}` }, // Stable ID for seeding
       create: {
-        id: `seed-${personData.fullName.replaceAll(/\s+/g, '-').toLowerCase()}`,
+        id: `seed-${personData.fullName.replace(/\s+/g, '-').toLowerCase()}`,
         ...personData,
         revisions: {
           create: {
@@ -148,11 +148,12 @@ async function main() {
   console.log('Seeding completed!');
 }
 
-try {
-  await main();
-} catch (e) {
-  console.error(e);
-  process.exit(1);
-} finally {
-  await prisma.$disconnect();
-}
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

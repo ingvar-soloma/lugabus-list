@@ -38,6 +38,9 @@ RUN pnpm run build
 # This creates a folder with package.json, node_modules (prod), and source files (respecting .npmignore/gitignore)
 RUN pnpm --filter backend --prod deploy /prod/backend
 
+# Explicitly copy built artifacts (since they might be gitignored)
+RUN cp -r dist /prod/backend/dist
+
 # Post-deploy setup: ensure prisma client is generated in the prod artifacts
 WORKDIR /prod/backend
 # Copy prisma folder from the source (since it might not be in 'files' or might be needed for generate)
@@ -75,4 +78,4 @@ USER node
 # Use dumb-init as entrypoint
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/src/index.js"]

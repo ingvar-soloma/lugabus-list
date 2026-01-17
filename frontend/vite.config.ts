@@ -15,11 +15,15 @@ export default defineConfig(({ mode }) => {
       watch: {
         usePolling: true,
       },
-      hmr: {
-        host: domain,
-        clientPort: 443,
-        protocol: 'wss',
-      },
+      ...(domain
+        ? {
+            hmr: {
+              host: domain,
+              clientPort: 443,
+              protocol: 'wss',
+            },
+          }
+        : {}),
       proxy: {
         '/api': {
           target: 'http://backend:8080',

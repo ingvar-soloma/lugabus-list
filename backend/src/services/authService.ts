@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../repositories/baseRepository';
 import { encryptJson, decryptJson } from '../utils/crypto';
+import { generateUsername, getAvatarColor } from '../utils/usernames';
 
 const storageService = new StorageService();
 
@@ -227,6 +228,8 @@ export class AuthService {
         id: pHash,
         encryptedData,
         mHash,
+        // displayName: generateUsername(),
+        // avatarColor: getAvatarColor(pHash),
         role: 'USER',
       },
     });

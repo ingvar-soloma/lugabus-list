@@ -109,6 +109,12 @@ model User {
 
   role            UserRole @default(USER)
 
+  // Display name (Reddit-style generated username)
+  displayName     String?
+  
+  // Avatar color (Google Sheets-style)
+  avatarColor     String?
+
   // Encrypted PII: { username, firstName, lastName, photoUrl, etc. }
   encryptedData   String?
 

@@ -11,6 +11,7 @@ services:
       - ./pnpm-lock.yaml:/usr/src/app/pnpm-lock.yaml
       - ./pnpm-workspace.yaml:/usr/src/app/pnpm-workspace.yaml
       - /usr/src/app/node_modules
+      - /usr/src/app/frontend/node_modules
     working_dir: /usr/src/app
     command: sh -c "corepack enable && pnpm install --frozen-lockfile && cd frontend && pnpm run dev --host"
 
