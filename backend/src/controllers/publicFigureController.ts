@@ -64,4 +64,9 @@ export class PublicFigureController {
       next(error);
     }
   };
+
+  trackVisit = async (req: Request, res: Response) => {
+    // Placeholder for analytics logic
+    res.status(204).send();
+  };
 }

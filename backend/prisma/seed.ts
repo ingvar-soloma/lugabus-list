@@ -8,12 +8,15 @@ function generatePHash(id: string): string {
 }
 
 async function main() {
-  console.log('Seeding data...');
+  console.log('Clearing old data...');
+  await prisma.evidence.deleteMany();
+  await prisma.revision.deleteMany();
+  await prisma.person.deleteMany();
 
-  // 1. Create a Test Admin and User
+  console.log('Seeding users...');
   const adminTgId = process.env.ADMIN_TELEGRAM_ID || '12345678';
   const adminId = generatePHash(adminTgId);
-  const userId = generatePHash('87654321'); // Mock Telegram ID for regular user
+  const userId = generatePHash('87654321');
 
   const admin = await prisma.user.upsert({
     where: { id: adminId },
@@ -35,7 +38,6 @@ async function main() {
     },
   });
 
-  // 2. Create Public Figures
   const figures = [
     {
       fullName: 'Володимир Сальдо',
@@ -84,14 +86,15 @@ async function main() {
     },
   ];
 
+  console.log('Seeding figures...');
   for (const fig of figures) {
     const { evidence, ...personData } = fig;
 
-    const person = await prisma.person.upsert({
-      where: { id: `seed-${personData.fullName.replace(/\s+/g, '-').toLowerCase()}` }, // Stable ID for seeding
-      create: {
+    const person = await prisma.person.create({
+      data: {
         id: `seed-${personData.fullName.replace(/\s+/g, '-').toLowerCase()}`,
         ...personData,
+        status: Status.APPROVED,
         revisions: {
           create: {
             authorId: admin.id,
@@ -104,15 +107,11 @@ async function main() {
           },
         },
       },
-      update: {
-        ...personData,
-      },
     });
 
-    console.log(`Created/Updated: ${person.fullName}`);
+    console.log(`Created: ${person.fullName}`);
   }
 
-  // 3. Create a Pending Revision for demonstration
   const pendingPerson = await prisma.person.create({
     data: {
       fullName: 'Денис Пушилін',
@@ -148,7 +147,6 @@ async function main() {
   console.log('Seeding completed!');
 }
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
 main()
   .catch((e) => {
     console.error(e);

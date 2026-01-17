@@ -1,0 +1,75 @@
+digraph LugaBusArchitecture {
+    rankdir=LR;
+    node [shape=box, style="filled,rounded", fontname="Arial", fontsize=10];
+    edge [fontname="Arial", fontsize=8];
+
+    // Clusters
+    subgraph cluster_client {
+        label = "Client Layer (Frontend)";
+        style = dashed;
+        color = "#10b981";
+        
+        App [label="React App\n(Vite + TS)", fillcolor="#ecfdf5"];
+        Store [label="AppContext\n(State Management)", fillcolor="#ecfdf5"];
+        Cards [label="Person Cards &\nModals", fillcolor="#ecfdf5"];
+        Dash [label="Admin Dashboard", fillcolor="#ecfdf5"];
+    }
+
+    subgraph cluster_security {
+        label = "Security Pipeline";
+        style = dotted;
+        color = "#ef4444";
+
+        HMAC [label="HMAC Pipeline\n(pHash Generation)", fillcolor="#fef2f2"];
+        ACL [label="Role-Based\nAccess Control", fillcolor="#fef2f2"];
+        RateLimit [label="Redis Rate Limiter", fillcolor="#fef2f2"];
+    }
+
+    subgraph cluster_backend {
+        label = "API Layer (Backend)";
+        style = solid;
+        color = "#3b82f6";
+
+        Controllers [label="Express\nControllers", fillcolor="#eff6ff"];
+        Services [label="Business Logic\n(Services)", fillcolor="#eff6ff"];
+        AIService [label="AI Processing\n(Gemini/OpenAI)", fillcolor="#fffbeb"];
+    }
+
+    subgraph cluster_data {
+        label = "Data & Storage";
+        style = solid;
+        color = "#8b5cf6";
+
+        Prisma [label="Prisma ORM", fillcolor="#f5f3ff"];
+        Postgres [label="PostgreSQL\n(Main DB)", fillcolor="#f5f3ff"];
+        Redis [label="Redis\n(Cache/Sessions)", fillcolor="#f5f3ff"];
+        S3 [label="S3 Storage\n(MinIO/AWS)", fillcolor="#f5f3ff"];
+    }
+
+    // External
+    TG [label="Telegram Bot\nAuth Widget", shape=ellipse, style=filled, fillcolor="#bae6fd"];
+
+    // Relationships
+    TG -> App [label="Login Hook"];
+    App -> HMAC [label="Auth Request"];
+    HMAC -> Store [label="pHash Session"];
+    
+    App -> RateLimit [label="Every Request"];
+    RateLimit -> Controllers;
+    
+    Controllers -> Services;
+    Services -> Prisma;
+    Prisma -> Postgres;
+    
+    Services -> AIService [label="Score Revision"];
+    AIService -> Services [label="Auto-Approve"];
+    
+    Services -> S3 [label="Upload Proofs"];
+    
+    // Core Logic Flow
+    Postgres -> Dash [label="Pending Revisions"];
+    Dash -> Controllers [label="Approve/Reject"];
+    
+    Postgres -> Cards [label="Person Snapshot"];
+    Postgres -> Cards [label="Evidence List"];
+}

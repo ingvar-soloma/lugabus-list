@@ -7,6 +7,7 @@
     "build": "tsc",
     "start": "node dist/src/index.js",
     "dev": "nodemon src/index.ts",
+    "tinker": "npx ts-node src/scripts/tinker.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "add-admin": "ts-node src/scripts/add-admin.ts"
   },

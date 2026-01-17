@@ -10,7 +10,7 @@ export const getPublicFiguresSchema = z.object({
 
 export const getPublicFigureByIdSchema = z.object({
   params: z.object({
-    id: z.string().uuid(),
+    id: z.string(),
   }),
 });
 

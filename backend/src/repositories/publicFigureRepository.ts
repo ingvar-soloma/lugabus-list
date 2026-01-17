@@ -10,15 +10,26 @@ export class PublicFigureRepository extends BaseRepository {
   }) {
     const figures = await this.prisma.person.findMany({
       ...options,
-      // include: { proofs: true }, // Person does not have proofs directly in new schema
+      include: {
+        revisions: {
+          where: { status: Status.APPROVED },
+          include: { evidences: true },
+        },
+      },
     });
 
-    return figures.map(this.mapToPerson);
+    return figures.map((f) => this.mapToPerson(f));
   }
 
   async getById(id: string) {
     const figure = await this.prisma.person.findUnique({
       where: { id },
+      include: {
+        revisions: {
+          where: { status: Status.APPROVED },
+          include: { evidences: true },
+        },
+      },
     });
     return figure ? this.mapToPerson(figure) : null;
   }
@@ -38,6 +49,34 @@ export class PublicFigureRepository extends BaseRepository {
       position = 'BETRAYAL';
     }
 
+    // Collect all evidences from all approved revisions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const allEvidences =
+      figure.revisions?.flatMap((rev: any) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (rev.evidences || []).map((ev: any) => ({
+          id: ev.id,
+          text: ev.title || rev.reason || 'Доказ без опису',
+          sourceUrl: ev.url,
+          type: ev.type,
+          date: rev.createdAt.toISOString().split('T')[0],
+          likes: 0,
+          dislikes: 0,
+          status: 'APPROVED',
+        })),
+      ) || [];
+
+    // Map revisions to history timeline
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const history =
+      figure.revisions?.map((rev: any) => ({
+        id: rev.id,
+        date: rev.createdAt.toISOString().split('T')[0],
+        title: rev.reason || 'Оновлення профілю',
+        description: 'Інформація була оновлена та верифікована модераторами.',
+        position: position, // Use the person's position for the event
+      })) || [];
+
     return {
       id: figure.id,
       name: figure.fullName,
@@ -46,10 +85,10 @@ export class PublicFigureRepository extends BaseRepository {
       category: figure.currentRole,
       position,
       score: figure.reputation,
-      proofsCount: 0, // figure.proofs?.length || 0,
+      proofsCount: allEvidences.length,
       lastUpdated: figure.updatedAt.toISOString().split('T')[0],
-      proofs: [], // figure.proofs || [],
-      history: [],
+      proofs: allEvidences,
+      history: history.sort((a: any, b: any) => b.date.localeCompare(a.date)),
     };
   }
 
@@ -74,11 +113,7 @@ export class PublicFigureRepository extends BaseRepository {
   }
 
   async getStats() {
-    const [total] = await Promise.all([
-      // , pending
-      this.prisma.person.count(),
-      // this.prisma.proof.count({ where: { figure: { status: 'PENDING' } } }),
-    ]);
+    const total = await this.prisma.person.count();
 
     return {
       totalMonitored: total,

@@ -12,6 +12,9 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    ports:
+      - "8080:8080"
+      - "5555:5555"
     environment:
       DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       JWT_SECRET: ${JWT_SECRET}

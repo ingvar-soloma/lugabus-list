@@ -11,6 +11,11 @@ import {
   ShieldAlert,
   ShieldQuestion,
   Brain,
+  Link2,
+  FileText,
+  Image,
+  Video,
+  Vote,
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
 import { useAppContext } from '../store/AppContext';
@@ -181,41 +186,68 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                   Матеріали та докази
                 </h4>
                 <div className="space-y-4">
-                  {person.proofs.map((proof) => (
-                    <div
-                      key={proof.id}
-                      className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 group hover:border-emerald-500/20 transition-all"
-                    >
-                      <p className="text-sm text-zinc-200 mb-4 leading-relaxed font-medium">
-                        {proof.text}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <a
-                          href={proof.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] text-emerald-500 flex items-center hover:underline font-black uppercase tracking-widest"
-                        >
-                          <ExternalLink size={12} className="mr-1.5" /> Посилання
-                        </a>
-                        <div className="flex items-center space-x-3">
-                          <button
-                            onClick={() => handleVote(proof.id, 'like')}
-                            className="flex items-center space-x-1.5 text-xs text-emerald-400/60 hover:text-emerald-400 transition-colors"
+                  {person.proofs.map((proof) => {
+                    const getIcon = () => {
+                      switch (proof.type) {
+                        case 'IMAGE':
+                          return <Image size={14} />;
+                        case 'DOCUMENT':
+                          return <FileText size={14} />;
+                        case 'VIDEO':
+                          return <Video size={14} />;
+                        case 'VOTE_RECORD':
+                          return <Vote size={14} />;
+                        default:
+                          return <Link2 size={14} />;
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={proof.id}
+                        className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 group hover:border-emerald-500/20 transition-all"
+                      >
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex items-center space-x-2 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                            {getIcon()}
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                              {proof.type || 'LINK'}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-zinc-600 font-bold">{proof.date}</span>
+                        </div>
+                        <p className="text-sm text-zinc-200 mb-4 leading-relaxed font-medium">
+                          {proof.text}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <a
+                            href={proof.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-emerald-500 flex items-center hover:underline font-black uppercase tracking-widest"
                           >
-                            <ThumbsUp size={14} /> <span className="font-bold">{proof.likes}</span>
-                          </button>
-                          <button
-                            onClick={() => handleVote(proof.id, 'dislike')}
-                            className="flex items-center space-x-1.5 text-xs text-red-400/60 hover:text-red-400 transition-colors"
-                          >
-                            <ThumbsDown size={14} />{' '}
-                            <span className="font-bold">{proof.dislikes}</span>
-                          </button>
+                            <ExternalLink size={12} className="mr-1.5" /> Джерело
+                          </a>
+                          <div className="flex items-center space-x-3">
+                            <button
+                              onClick={() => handleVote(proof.id, 'like')}
+                              className="flex items-center space-x-1.5 text-xs text-emerald-400/60 hover:text-emerald-400 transition-colors"
+                            >
+                              <ThumbsUp size={14} />{' '}
+                              <span className="font-bold">{proof.likes}</span>
+                            </button>
+                            <button
+                              onClick={() => handleVote(proof.id, 'dislike')}
+                              className="flex items-center space-x-1.5 text-xs text-red-400/60 hover:text-red-400 transition-colors"
+                            >
+                              <ThumbsDown size={14} />{' '}
+                              <span className="font-bold">{proof.dislikes}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <button
                     onClick={() => setIsAddEvidenceOpen(true)}
                     className="w-full py-5 border border-dashed border-zinc-800 rounded-2xl text-zinc-600 hover:text-emerald-500 hover:border-emerald-500/50 transition-all font-black text-xs tracking-widest uppercase"

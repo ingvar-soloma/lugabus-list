@@ -19,6 +19,7 @@ export interface Proof {
   likes: number;
   dislikes: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EDITS_REQUIRED';
+  type?: 'LINK' | 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'VOTE_RECORD';
   submittedBy?: string; // Анонімний ID користувача
 }
 
