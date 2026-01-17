@@ -43,6 +43,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setUser(userData);
     } catch (error) {
       console.error('Login failed', error);
+      throw error;
     }
   };
 
@@ -67,13 +68,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     initAuth();
   }, []);
 
-  return (
-    <AppContext.Provider
-      value={{ user, setUser, people, stats, loading, login, logout, refreshData }}
-    >
-      {children}
-    </AppContext.Provider>
+  const contextValue = React.useMemo(
+    () => ({ user, setUser, people, stats, loading, login, logout, refreshData }),
+    [user, people, stats, loading],
   );
+
+  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
 };
 
 export const useAppContext = () => {

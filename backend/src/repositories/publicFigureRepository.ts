@@ -19,9 +19,14 @@ export class PublicFigureRepository extends BaseRepository {
   async getById(id: string) {
     const figure = await this.prisma.person.findUnique({
       where: { id },
-      // include: { proofs: true },
     });
     return figure ? this.mapToPerson(figure) : null;
+  }
+
+  async getRawById(id: string) {
+    return this.prisma.person.findUnique({
+      where: { id },
+    });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,10 +64,10 @@ export class PublicFigureRepository extends BaseRepository {
   async create(data: any) {
     return this.prisma.person.create({
       data: {
-        fullName: data.name,
-        currentRole: data.role,
-        bio: data.statement,
-        reputation: data.rating || 0,
+        fullName: data.fullName,
+        currentRole: data.currentRole,
+        bio: data.bio,
+        reputation: data.reputation || 0,
         status: data.status || 'PENDING',
       },
     });

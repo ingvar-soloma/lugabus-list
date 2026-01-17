@@ -238,7 +238,7 @@ export class RevisionRepository extends BaseRepository {
       });
 
       if (!revision) throw new Error('Revision not found');
-      if (!([Status.PENDING, Status.QUEUED_FOR_AI] as Status[]).includes(revision.status)) {
+      if (revision.status !== Status.PENDING && revision.status !== Status.QUEUED_FOR_AI) {
         throw new Error('Revision is not in a votable state');
       }
 

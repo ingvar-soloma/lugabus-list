@@ -48,7 +48,7 @@ export class PublicFigureController {
 
   getOgImage = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const person = await this.service.getById(req.params.id);
+      const person = await this.service.getRawById(req.params.id);
       if (!person) {
         res.status(404).json({ message: 'Person not found' });
         return;

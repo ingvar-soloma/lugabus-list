@@ -104,34 +104,15 @@ class ApiService {
   }
 
   async getMe(): Promise<User> {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('No token');
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: this.getHeaders(),
+    });
 
-    // Robust JWT decoding that handles Base64Url
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replaceAll('-', '+').replaceAll('_', '/');
-      const jsonPayload = decodeURIComponent(
-        globalThis
-          .atob(base64)
-          .split('')
-          .map(function (c) {
-            return '%' + ('00' + (c.codePointAt(0)?.toString(16) || '00')).slice(-2);
-          })
-          .join(''),
-      );
-
-      const payload = JSON.parse(jsonPayload);
-      return {
-        id: payload.id,
-        username: payload.username,
-        role: payload.role,
-        avatar: payload.avatar,
-      };
-    } catch (e) {
-      console.error('Failed to decode token', e);
-      throw e;
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile');
     }
+
+    return response.json();
   }
 
   async fetchAuditLogs(): Promise<AuditLog[]> {

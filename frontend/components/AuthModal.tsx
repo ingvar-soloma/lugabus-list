@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, User as UserIcon, Lock, ArrowRight, Loader } from 'lucide-react';
 import { apiService } from '../services/apiService';
@@ -14,7 +14,7 @@ interface AuthModalProps {
 type AuthMode = 'login' | 'register';
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { setUser: setAppUser } = useAppContext();
+  const { setUser: setAppUser, login: appLogin } = useAppContext();
   const [mode, setMode] = useState<AuthMode>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,14 +47,24 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleTelegramAuth = async (user: User) => {
-    setAppUser(user);
-    onClose();
-  };
+  const handleTelegramAuth = useCallback(
+    async (data: Record<string, unknown>) => {
+      setLoading(true);
+      setError(null);
+      try {
+        await appLogin(data);
+        onClose();
+      } catch (err) {
+        setError((err as Error).message || 'Telegram login failed');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [appLogin, onClose],
+  );
 
   if (!isOpen) return null;
 
-  // @ts-expect-error: Framer Motion type mismatch with React 19
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <motion.div

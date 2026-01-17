@@ -13,7 +13,20 @@ import swaggerSpec from './config/swagger';
 const app = express();
 const port = process.env.PORT || 8080;
 
+// Trust proxy for express-rate-limit (useful for ngrok, load balancers, etc.)
+app.set('trust proxy', 1);
+
 logger.info('Starting server initialization...');
+
+const botToken = process.env.TELEGRAM_BOT_TOKEN;
+if (botToken) {
+  logger.info('Telegram Bot Token Loaded', {
+    length: botToken.length,
+    hint: botToken.substring(0, 5) + '...' + botToken.substring(botToken.length - 3),
+  });
+} else {
+  logger.warn('TELEGRAM_BOT_TOKEN is NOT defined in environment variables');
+}
 
 process.on('uncaughtException', (err) => {
   logger.error('Uncaught Exception:', err);

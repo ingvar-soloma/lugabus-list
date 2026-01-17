@@ -3,7 +3,7 @@ import { EvidenceType, Polarity } from '@prisma/client';
 
 export const createRevisionSchema = z.object({
   body: z.object({
-    personId: z.string().uuid(),
+    personId: z.string().min(1),
     proposedData: z.record(z.string(), z.any()),
     reason: z.string().max(1000).optional(),
     evidences: z
@@ -27,7 +27,7 @@ export const getRevisionByIdSchema = z.object({
 
 export const getHistorySchema = z.object({
   params: z.object({
-    personId: z.string().uuid(),
+    personId: z.string().min(1),
   }),
 });
 
