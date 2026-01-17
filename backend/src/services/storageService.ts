@@ -1,12 +1,19 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  CreateBucketCommand,
+  HeadBucketCommand,
+  PutBucketPolicyCommand,
+} from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import sharp from 'sharp';
 import crypto from 'node:crypto';
 import logger from '../config/logger';
 
 export class StorageService {
-  private client: S3Client;
-  private bucket: string;
+  private readonly client: S3Client;
+  private readonly bucket: string;
+  private isInitialized = false;
 
   constructor() {
     this.bucket = process.env.S3_BUCKET || 'lugabus-media';
@@ -19,6 +26,61 @@ export class StorageService {
       },
       forcePathStyle: process.env.S3_FORCE_PATH_STYLE === 'true',
     });
+  }
+
+  /**
+   * lazy initializes the bucket and policy
+   */
+  private async initialize(): Promise<void> {
+    if (this.isInitialized) return;
+    await this.ensureBucketExists();
+    this.isInitialized = true;
+  }
+
+  /**
+   * Checks if the bucket exists and creates it if not.
+   * Also sets a public read policy for the bucket.
+   */
+  async ensureBucketExists(): Promise<void> {
+    try {
+      await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+      logger.info(`Bucket "${this.bucket}" already exists`);
+    } catch (error: unknown) {
+      const err = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+      if (err.name === 'NotFound' || err.$metadata?.httpStatusCode === 404) {
+        logger.info(`Bucket "${this.bucket}" does not exist, creating...`);
+        try {
+          await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
+
+          // Set public policy so images are accessible via Browser
+          const policy = {
+            Version: '2012-10-17',
+            Statement: [
+              {
+                Sid: 'PublicRead',
+                Effect: 'Allow',
+                Principal: '*',
+                Action: ['s3:GetObject'],
+                Resource: [`arn:aws:s3:::${this.bucket}/*`],
+              },
+            ],
+          };
+
+          await this.client.send(
+            new PutBucketPolicyCommand({
+              Bucket: this.bucket,
+              Policy: JSON.stringify(policy),
+            }),
+          );
+
+          logger.info(`Bucket "${this.bucket}" created with public-read policy`);
+        } catch (createError) {
+          logger.error(`Failed to create bucket "${this.bucket}"`, createError);
+        }
+      } else {
+        logger.error(`Unexpected error checking bucket "${this.bucket}"`, error);
+      }
+    }
   }
 
   /**
@@ -47,6 +109,7 @@ export class StorageService {
    */
   async uploadImage(buffer: Buffer, _originalName: string, folder = 'uploads'): Promise<string> {
     try {
+      await this.initialize();
       // 1. Validate real MIME type
       await this.validateMimeType(buffer, 'image');
 
@@ -94,6 +157,7 @@ export class StorageService {
     folder = 'documents',
   ): Promise<string> {
     try {
+      await this.initialize();
       const type = await this.validateMimeType(buffer, 'any');
 
       const hash = crypto.randomBytes(16).toString('hex');
