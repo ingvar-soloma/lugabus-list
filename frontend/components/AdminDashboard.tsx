@@ -16,23 +16,27 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../store/AppContext';
 import { apiService } from '../services/apiService';
-import { AIInsight, AuditLog, User as UserType } from '../types';
+import { AIInsight, AuditLog, User as UserType, Revision } from '../types';
 import { motion } from 'framer-motion';
 
 const AdminDashboard: React.FC = () => {
-  const { people } = useAppContext();
+  const { people, showToast, refreshData } = useAppContext();
   const [activeTab, setActiveTab] = useState<'proofs' | 'entities' | 'audit' | 'ai' | 'users'>(
     'proofs',
   );
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [insights, setInsights] = useState<AIInsight[]>([]);
   const [users, setUsers] = useState<UserType[]>([]);
+  const [revisions, setRevisions] = useState<Revision[]>([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const loadAdminData = async () => {
-      setLoading(true);
-      if (activeTab === 'audit') {
+  const loadAdminData = async () => {
+    setLoading(true);
+    try {
+      if (activeTab === 'proofs') {
+        const data = await apiService.fetchPendingRevisions();
+        setRevisions(data);
+      } else if (activeTab === 'audit') {
         const data = await apiService.fetchAuditLogs();
         setLogs(data);
       } else if (activeTab === 'ai') {
@@ -42,10 +46,42 @@ const AdminDashboard: React.FC = () => {
         const data = await apiService.fetchUsers();
         setUsers(data);
       }
+    } catch (error) {
+      console.error('Failed to load admin data', error);
+      showToast('Помилка при завантаженні даних', 'error');
+    } finally {
       setLoading(false);
-    };
+    }
+  };
+
+  useEffect(() => {
     loadAdminData();
   }, [activeTab]);
+
+  const handleApprove = async (id: string) => {
+    try {
+      await apiService.approveRevision(id);
+      showToast('Ревізію затверджено');
+      loadAdminData();
+      refreshData();
+    } catch (error) {
+      console.error('Approval failed', error);
+      showToast('Помилка при затвердженні', 'error');
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    const reason = globalThis.prompt('Причина відхилення:');
+    if (reason === null) return;
+    try {
+      await apiService.rejectRevision(id, reason);
+      showToast('Ревізію відхилено');
+      loadAdminData();
+    } catch (error) {
+      console.error('Rejection failed', error);
+      showToast('Помилка при відхиленні', 'error');
+    }
+  };
 
   return (
     <motion.div
@@ -68,7 +104,9 @@ const AdminDashboard: React.FC = () => {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
+              onClick={() =>
+                setActiveTab(tab.id as 'proofs' | 'entities' | 'audit' | 'ai' | 'users')
+              }
               className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20' : 'text-zinc-500 hover:text-zinc-300'}`}
             >
               <tab.icon size={14} className="inline mr-2" />
@@ -88,34 +126,14 @@ const AdminDashboard: React.FC = () => {
             {activeTab === 'proofs' && (
               <div className="space-y-4">
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">
-                  Черга модерації: 14 активних заявок
+                  Черга модерації: {revisions.length} активних заявок
                 </p>
-                {[
-                  {
-                    id: '1',
-                    target: 'Олександр Петров',
-                    text: 'Підтримка закликів до дестабілізації під час виступу на форумі...',
-                    source: 'youtube.com/watch?v=...',
-                    authorId: 'u-432',
-                    time: '4г тому',
-                  },
-                  {
-                    id: '2',
-                    target: 'Марія Патріотка',
-                    text: 'Верифікований звіт про передачу обладнання для 3-ї ОШБр.',
-                    source: 'facebook.com/posts/...',
-                    authorId: 'u-128',
-                    time: '2г тому',
-                  },
-                  {
-                    id: '3',
-                    target: 'Віктор Тихоня',
-                    text: 'Докази перебування на розважальних заходах у Дубаї під час обстрілів.',
-                    source: 'instagram.com/p/...',
-                    authorId: 'u-901',
-                    time: '1г тому',
-                  },
-                ].map((item) => (
+                {revisions.length === 0 && (
+                  <div className="text-center py-20 text-zinc-600 font-bold uppercase tracking-widest">
+                    Черга порожня
+                  </div>
+                )}
+                {revisions.map((item) => (
                   <div
                     key={item.id}
                     className="bg-zinc-900/40 p-6 rounded-2xl border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center group hover:border-emerald-500/20 transition-all"
@@ -123,24 +141,37 @@ const AdminDashboard: React.FC = () => {
                     <div className="mb-6 lg:mb-0">
                       <div className="flex items-center space-x-2 mb-2">
                         <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">
-                          Об'єкт: {item.target}
+                          Об'єкт: {item.person?.name || 'Н/Д'}
                         </p>
                         <span className="text-[9px] text-zinc-600 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
-                          SUBMITTER: #{item.authorId}
+                          REVISION ID: {item.id.substring(0, 8)}
                         </span>
                       </div>
                       <p className="text-base text-zinc-200 font-medium leading-relaxed max-w-md">
-                        "{item.text}"
+                        {item.reason || 'Запропоновано зміни до даних або докази'}
                       </p>
-                      <p className="text-[9px] text-zinc-600 mt-3 font-bold uppercase tracking-widest italic">
-                        Джерело: {item.source} • {item.time}
-                      </p>
+                      <div className="mt-3 space-y-2">
+                        {item.evidences?.map((ev) => (
+                          <p
+                            key={ev.url}
+                            className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest italic truncate max-w-xs"
+                          >
+                            Доказ: {ev.url}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                     <div className="flex space-x-3 w-full lg:w-auto">
-                      <button className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-emerald-500/10 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-zinc-950 transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500/20">
+                      <button
+                        onClick={() => handleApprove(item.id)}
+                        className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-emerald-500/10 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-zinc-950 transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500/20"
+                      >
                         <CheckCircle size={14} /> <span>ЗАТВЕРДИТИ</span>
                       </button>
-                      <button className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-red-500/20">
+                      <button
+                        onClick={() => handleReject(item.id)}
+                        className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-red-500/20"
+                      >
                         <XCircle size={14} /> <span>ВІДХИЛИТИ</span>
                       </button>
                     </div>
@@ -221,7 +252,7 @@ const AdminDashboard: React.FC = () => {
                     <tr className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] border-b border-white/5">
                       <th className="pb-6 px-4">Користувач</th>
                       <th className="pb-6 px-4">Роль</th>
-                      <th className="pb-6 px-4">E-mail</th>
+                      <th className="pb-6 px-4">Username</th>
                       <th className="pb-6 px-4">Активність</th>
                       <th className="pb-6 px-4 text-right">Реєстрація</th>
                     </tr>
@@ -238,10 +269,10 @@ const AdminDashboard: React.FC = () => {
                             />
                             <div>
                               <p className="font-black tracking-tight text-zinc-200">
-                                {u.username}
+                                {u.firstName} {u.lastName}
                               </p>
                               <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">
-                                ID: {u.id}
+                                ID: {u.id.substring(0, 8)}
                               </p>
                             </div>
                           </div>
@@ -265,22 +296,22 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="py-5 px-4 text-zinc-400 font-medium flex items-center space-x-2">
                           <Mail size={12} className="text-zinc-600" />
-                          <span>{u.email}</span>
+                          <span>{u.username}</span>
                         </td>
                         <td className="py-5 px-4">
                           <div className="flex flex-col leading-none">
                             <span className="text-emerald-500 font-black text-xs">
-                              {u.submissionsCount}
+                              {u.reputation}
                             </span>
                             <span className="text-[9px] text-zinc-600 uppercase font-bold mt-1">
-                              сабмітів
+                              репутація
                             </span>
                           </div>
                         </td>
                         <td className="py-5 px-4 text-right text-zinc-500 font-bold uppercase text-[10px]">
                           <div className="flex items-center justify-end space-x-1.5">
                             <CalendarIcon size={12} />
-                            <span>{u.createdAt}</span>
+                            <span>{new Date(u.createdAt).toLocaleDateString()}</span>
                           </div>
                         </td>
                       </tr>
@@ -295,6 +326,11 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-6">
                   Журнал дій адміністрації
                 </p>
+                {logs.length === 0 && (
+                  <div className="text-center py-20 text-zinc-600 font-bold uppercase tracking-widest">
+                    Журнал порожній
+                  </div>
+                )}
                 {logs.map((log) => (
                   <div
                     key={log.id}
@@ -306,15 +342,15 @@ const AdminDashboard: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-xs font-bold">
-                          <span className="text-emerald-500">{log.adminName}</span> — {log.action}
+                          <span className="text-emerald-500">{log.userId}</span> — {log.action}
                         </p>
                         <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-1">
-                          Ціль: {log.targetName}
+                          Деталі: {JSON.stringify(log.details)}
                         </p>
                       </div>
                     </div>
                     <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">
-                      {log.timestamp}
+                      {new Date(log.createdAt).toLocaleString()}
                     </span>
                   </div>
                 ))}
@@ -328,6 +364,11 @@ const AdminDashboard: React.FC = () => {
                     Висновки AI-Консиліуму
                   </p>
                 </div>
+                {insights.length === 0 && (
+                  <div className="col-span-full text-center py-20 text-zinc-600 font-bold uppercase tracking-widest">
+                    AI ще не сформував висновків
+                  </div>
+                )}
                 {insights.map((insight) => (
                   <div key={insight.id} className="glass p-6 rounded-3xl border-white/10 relative">
                     <div className="absolute top-4 right-4 bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2 py-1 rounded-lg">
@@ -337,7 +378,7 @@ const AdminDashboard: React.FC = () => {
                       <Brain size={24} className="text-purple-400 mt-1" />
                       <div>
                         <h4 className="font-black tracking-tight mb-2">
-                          Об'єкт: {people.find((p) => p.id === insight.targetId)?.name}
+                          Об'єкт: #{insight.targetId.substring(0, 8)}
                         </h4>
                         <p className="text-sm text-zinc-400 leading-relaxed italic">
                           "{insight.summary}"

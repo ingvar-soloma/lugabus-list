@@ -5,7 +5,6 @@ import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../repositories/baseRepository';
 import { encryptJson, decryptJson } from '../utils/crypto';
-import { generateUsername, getAvatarColor } from '../utils/usernames';
 
 const storageService = new StorageService();
 
@@ -20,7 +19,7 @@ export class AuthService {
       where: { id: pHash },
     });
 
-    if (!user || !user.encryptedData) return null;
+    if (!user?.encryptedData) return null;
 
     const encryptionKey = process.env.ENCRYPTION_KEY;
     if (!encryptionKey) throw new Error('ENCRYPTION_KEY is not defined');

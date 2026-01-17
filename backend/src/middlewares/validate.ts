@@ -12,7 +12,14 @@ export const validate =
       next();
     } catch (e) {
       if (e instanceof z.ZodError) {
-        return res.status(400).json(e.issues);
+        return res.status(400).json({
+          status: 'error',
+          message: 'Validation failed',
+          errors: e.issues.map((err: z.ZodIssue) => ({
+            field: err.path.slice(1).join('.'), // Remove 'body', 'query', or 'params'
+            message: err.message,
+          })),
+        });
       }
       next(e);
     }

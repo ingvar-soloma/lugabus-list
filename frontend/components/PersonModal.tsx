@@ -1,5 +1,4 @@
-// React import removed because it was unused
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Person, PoliticalPosition } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,9 +10,12 @@ import {
   ShieldCheck,
   ShieldAlert,
   ShieldQuestion,
+  Brain,
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
+import { useAppContext } from '../store/AppContext';
 import AddEvidenceModal from './AddEvidenceModal';
+
 interface PersonModalProps {
   person: Person | null;
   onClose: () => void;
@@ -21,11 +23,40 @@ interface PersonModalProps {
 
 const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
   const [isAddEvidenceOpen, setIsAddEvidenceOpen] = useState(false);
+  const { showToast, refreshData } = useAppContext();
+
+  useEffect(() => {
+    if (person) {
+      const startTime = Date.now();
+      return () => {
+        const timeSpent = Date.now() - startTime;
+        apiService.trackVisit(person.id, timeSpent);
+      };
+    }
+  }, [person]);
 
   if (!person) return null;
 
   const handleVote = async (proofId: string, type: 'like' | 'dislike') => {
-    await apiService.voteProof(proofId, type);
+    try {
+      await apiService.voteProof(proofId, type);
+      showToast(type === 'like' ? 'Дякуємо за голос!' : 'Висловили сумнів', 'info');
+      refreshData();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Помилка при голосуванні';
+      showToast(message, 'error');
+    }
+  };
+
+  const handlePriorityVote = async () => {
+    try {
+      await apiService.voteForDeepCheck(person.id);
+      showToast('Голос за глибоку перевірку зараховано', 'success');
+      refreshData();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Помилка при голосуванні';
+      showToast(message, 'error');
+    }
   };
 
   return (
@@ -77,12 +108,21 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                 </div>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handlePriorityVote}
+                className="bg-purple-500/10 text-purple-400 px-4 py-2.5 rounded-2xl text-[10px] font-black tracking-widest border border-purple-500/20 uppercase flex items-center hover:bg-purple-500 hover:text-white transition-all shadow-lg hover:shadow-purple-500/20"
+                title="Підняти в рейтингу для глибокої перевірки"
+              >
+                <Brain className="mr-2" size={14} /> Глибока перевірка
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-8 space-y-10">
@@ -152,6 +192,8 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                       <div className="flex items-center justify-between">
                         <a
                           href={proof.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-[10px] text-emerald-500 flex items-center hover:underline font-black uppercase tracking-widest"
                         >
                           <ExternalLink size={12} className="mr-1.5" /> Посилання
@@ -192,6 +234,7 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
         personName={person.name}
         isOpen={isAddEvidenceOpen}
         onClose={() => setIsAddEvidenceOpen(false)}
+        onSuccess={() => refreshData()}
       />
     </AnimatePresence>
   );

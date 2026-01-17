@@ -1,13 +1,15 @@
-import { Request, Response, NextFunction } from 'express';
+import { Response, NextFunction } from 'express';
 import { AuthService } from '../services/authService';
 import { LoginBody, UpdateStatusBody } from '../models/types/adminTypes';
 import { AdminService } from '../services/adminService';
+import { AuthRequest } from '../middlewares/authMiddleware';
+import { Status, UserRole } from '@prisma/client';
 
 export class AdminController {
   private authService = new AuthService();
   private adminService = new AdminService();
 
-  login = async (req: Request, res: Response, next: NextFunction) => {
+  login = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { username, password } = req.body as LoginBody;
       const token = await this.authService.login(username, password);
@@ -21,7 +23,7 @@ export class AdminController {
     }
   };
 
-  updateStatus = async (req: Request, res: Response, next: NextFunction) => {
+  updateStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { status } = req.body as UpdateStatusBody;
@@ -32,7 +34,7 @@ export class AdminController {
     }
   };
 
-  getUsers = async (req: Request, res: Response, next: NextFunction) => {
+  getUsers = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const users = await this.adminService.getUsers();
       res.json(users);
@@ -41,7 +43,7 @@ export class AdminController {
     }
   };
 
-  getAuditLogs = async (req: Request, res: Response, next: NextFunction) => {
+  getAuditLogs = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const logs = await this.adminService.getAuditLogs();
       res.json(logs);
@@ -50,7 +52,7 @@ export class AdminController {
     }
   };
 
-  getAIInsights = async (req: Request, res: Response, next: NextFunction) => {
+  getAIInsights = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const insights = await this.adminService.getAIInsights();
       res.json(insights);
@@ -61,11 +63,11 @@ export class AdminController {
 
   // ===== QUEUE MANAGEMENT =====
 
-  getRevisionQueue = async (req: Request, res: Response, next: NextFunction) => {
+  getRevisionQueue = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { status, limit, offset } = req.query;
       const queue = await this.adminService.getRevisionQueue({
-        status: status as any,
+        status: status as Status,
         limit: limit ? parseInt(limit as string) : undefined,
         offset: offset ? parseInt(offset as string) : undefined,
       });
@@ -75,10 +77,11 @@ export class AdminController {
     }
   };
 
-  approveRevision = async (req: Request, res: Response, next: NextFunction) => {
+  approveRevision = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const adminId = (req as any).user?.sub;
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
       const revision = await this.adminService.approveRevision(id, adminId);
       res.json(revision);
     } catch (error) {
@@ -86,11 +89,12 @@ export class AdminController {
     }
   };
 
-  rejectRevision = async (req: Request, res: Response, next: NextFunction) => {
+  rejectRevision = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { reason } = req.body;
-      const adminId = (req as any).user?.sub;
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
       const revision = await this.adminService.rejectRevision(id, adminId, reason);
       res.json(revision);
     } catch (error) {
@@ -100,7 +104,7 @@ export class AdminController {
 
   // ===== EVIDENCE MANAGEMENT =====
 
-  getEvidence = async (req: Request, res: Response, next: NextFunction) => {
+  getEvidence = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { limit, offset } = req.query;
       const evidence = await this.adminService.getEvidence({
@@ -113,10 +117,11 @@ export class AdminController {
     }
   };
 
-  deleteEvidence = async (req: Request, res: Response, next: NextFunction) => {
+  deleteEvidence = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const adminId = (req as any).user?.sub;
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
       const evidence = await this.adminService.deleteEvidence(id, adminId);
       res.json(evidence);
     } catch (error) {
@@ -126,11 +131,11 @@ export class AdminController {
 
   // ===== PERSON MANAGEMENT =====
 
-  getPersons = async (req: Request, res: Response, next: NextFunction) => {
+  getPersons = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { status, limit, offset } = req.query;
       const persons = await this.adminService.getPersons({
-        status: status as any,
+        status: status as Status,
         limit: limit ? parseInt(limit as string) : undefined,
         offset: offset ? parseInt(offset as string) : undefined,
       });
@@ -140,11 +145,12 @@ export class AdminController {
     }
   };
 
-  updatePersonStatus = async (req: Request, res: Response, next: NextFunction) => {
+  updatePersonStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { status } = req.body;
-      const adminId = (req as any).user?.sub;
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
       const person = await this.adminService.updatePersonStatus(id, status, adminId);
       res.json(person);
     } catch (error) {
@@ -152,10 +158,11 @@ export class AdminController {
     }
   };
 
-  deletePerson = async (req: Request, res: Response, next: NextFunction) => {
+  deletePerson = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const adminId = (req as any).user?.sub;
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
       const person = await this.adminService.deletePerson(id, adminId);
       res.json(person);
     } catch (error) {
@@ -165,23 +172,25 @@ export class AdminController {
 
   // ===== USER MANAGEMENT =====
 
-  updateUserRole = async (req: Request, res: Response, next: NextFunction) => {
+  updateUserRole = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { role } = req.body;
-      const adminId = (req as any).user?.sub;
-      const user = await this.adminService.updateUserRole(id, role, adminId);
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
+      const user = await this.adminService.updateUserRole(id, role as UserRole, adminId);
       res.json(user);
     } catch (error) {
       next(error);
     }
   };
 
-  shadowBanUser = async (req: Request, res: Response, next: NextFunction) => {
+  shadowBanUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { reason } = req.body;
-      const adminId = (req as any).user?.sub;
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
       const user = await this.adminService.shadowBanUser(id, adminId, reason);
       res.json(user);
     } catch (error) {
@@ -189,10 +198,11 @@ export class AdminController {
     }
   };
 
-  unshadowBanUser = async (req: Request, res: Response, next: NextFunction) => {
+  unshadowBanUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const adminId = (req as any).user?.sub;
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
       const user = await this.adminService.unshadowBanUser(id, adminId);
       res.json(user);
     } catch (error) {
@@ -200,11 +210,12 @@ export class AdminController {
     }
   };
 
-  updateUserReputation = async (req: Request, res: Response, next: NextFunction) => {
+  updateUserReputation = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { reputation } = req.body;
-      const adminId = (req as any).user?.sub;
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
       const user = await this.adminService.updateUserReputation(id, reputation, adminId);
       res.json(user);
     } catch (error) {

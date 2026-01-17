@@ -24,12 +24,14 @@ export interface Proof {
 
 export interface AuditLog {
   id: string;
-  adminId: string;
-  adminName: string;
+  userId: string;
+  adminName?: string;
   action: string;
-  targetId: string;
-  targetName: string;
-  timestamp: string;
+  targetId?: string;
+  targetName?: string;
+  details?: Record<string, unknown>;
+  createdAt: string;
+  timestamp?: string; // Compatibility with legacy bits
 }
 
 export interface AIInsight {
@@ -68,8 +70,28 @@ export interface User {
   role: UserRole;
   avatar?: string;
   email?: string;
-  createdAt?: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt: string;
   submissionsCount?: number;
+  reputation?: number;
+}
+
+export interface Revision {
+  id: string;
+  personId: string;
+  person?: {
+    name: string;
+  };
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  evidences?: Array<{
+    url: string;
+    title?: string;
+    type: string;
+    polarity: string;
+  }>;
+  createdAt: string;
 }
 
 export interface Stats {

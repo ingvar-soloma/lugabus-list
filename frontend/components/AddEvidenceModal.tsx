@@ -1,7 +1,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Link2, FileText, Image, Video, Vote, Trash2, Send } from 'lucide-react';
-import { apiService } from '../services/apiService';
+import {
+  X,
+  Plus,
+  Link2,
+  FileText,
+  Image,
+  Video,
+  Vote,
+  Trash2,
+  Send,
+  AlertCircle,
+} from 'lucide-react';
+import { apiService, ApiError } from '../services/apiService';
+import { useAppContext } from '../store/AppContext';
 
 interface EvidenceItem {
   url: string;
@@ -39,7 +51,9 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
+  const { showToast } = useAppContext();
 
   const handleAddEvidence = () => {
     setEvidences([...evidences, { url: '', title: '', type: 'LINK', polarity: 'SUPPORT' }]);
@@ -57,25 +71,32 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
     setEvidences(updated);
   };
 
-  const handleSubmit = async () => {
-    setError(null);
-
-    // Validation
-    const validEvidences = evidences.filter((e) => e.url.trim() !== '');
+  const validateForm = (validEvidences: EvidenceItem[]) => {
     if (validEvidences.length === 0) {
       setError('Додайте хоча б одне посилання на доказ');
-      return;
+      return false;
     }
 
     // URL validation
     for (const evidence of validEvidences) {
-      try {
-        new URL(evidence.url);
-      } catch {
-        setError(`Невірний URL: ${evidence.url}`);
-        return;
+      if (evidence.url.trim()) {
+        try {
+          new URL(evidence.url);
+        } catch {
+          setError(`Невірний URL: ${evidence.url}`);
+          return false;
+        }
       }
     }
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    setFieldErrors({});
+
+    const validEvidences = evidences.filter((e) => e.url.trim() !== '');
+    if (!validateForm(validEvidences)) return;
 
     setIsSubmitting(true);
 
@@ -93,6 +114,7 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
       });
 
       setSuccess(true);
+      showToast('Доказ успішно надіслано на модерацію');
       setTimeout(() => {
         onSuccess?.();
         onClose();
@@ -102,7 +124,17 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
         setSuccess(false);
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Помилка при відправці');
+      if (err instanceof ApiError && err.errors) {
+        const errors: Record<string, string> = {};
+        err.errors.forEach((e) => {
+          errors[e.field] = e.message;
+        });
+        setFieldErrors(errors);
+        setError('Перевірте правильність заповнення полів');
+      } else {
+        setError(err instanceof Error ? err.message : 'Помилка при відправці');
+        showToast(err instanceof Error ? err.message : 'Помилка при відправці', 'error');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -163,44 +195,60 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
               <>
                 {/* Reason */}
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 block mb-3">
+                  <label
+                    htmlFor="reason-comment"
+                    className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 block mb-3 cursor-pointer"
+                  >
                     Коментар (необов'язково)
                   </label>
                   <textarea
+                    id="reason-comment"
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Опишіть контекст доказу..."
                     className="w-full bg-zinc-900/50 border border-white/10 rounded-xl p-4 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none h-24"
                   />
+                  {fieldErrors.reason && (
+                    <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
+                      <AlertCircle size={10} /> {fieldErrors.reason}
+                    </p>
+                  )}
                 </div>
 
                 {/* Evidence List */}
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 block mb-3">
+                <div id="evidence-list-label">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 block mb-3">
                     Докази
-                  </label>
+                  </span>
 
                   <div className="space-y-4">
                     {evidences.map((evidence, index) => (
                       <div
-                        key={index}
+                        key={`${index}-${evidence.type}`}
                         className="bg-zinc-900/40 p-4 rounded-2xl border border-white/5 space-y-3"
                       >
                         <div className="flex gap-3">
                           {/* URL Input */}
-                          <input
-                            type="url"
-                            value={evidence.url}
-                            onChange={(e) => handleEvidenceChange(index, 'url', e.target.value)}
-                            placeholder="https://..."
-                            className="flex-1 bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-3 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                          />
+                          <div className="flex-1">
+                            <input
+                              type="url"
+                              value={evidence.url}
+                              onChange={(e) => handleEvidenceChange(index, 'url', e.target.value)}
+                              placeholder="https://..."
+                              className="w-full bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-3 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                            />
+                            {fieldErrors[`evidences.${index}.url`] && (
+                              <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
+                                <AlertCircle size={10} /> {fieldErrors[`evidences.${index}.url`]}
+                              </p>
+                            )}
+                          </div>
 
                           {/* Remove Button */}
                           {evidences.length > 1 && (
                             <button
                               onClick={() => handleRemoveEvidence(index)}
-                              className="p-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-400 transition-colors"
+                              className="p-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-red-400 transition-colors h-fit"
                             >
                               <Trash2 size={18} />
                             </button>
@@ -208,19 +256,32 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
                         </div>
 
                         {/* Title */}
-                        <input
-                          type="text"
-                          value={evidence.title}
-                          onChange={(e) => handleEvidenceChange(index, 'title', e.target.value)}
-                          placeholder="Назва (необов'язково)"
-                          className="w-full bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
-                        />
+                        <div>
+                          <input
+                            type="text"
+                            value={evidence.title}
+                            onChange={(e) => handleEvidenceChange(index, 'title', e.target.value)}
+                            placeholder="Назва (необов'язково)"
+                            className="w-full bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                          />
+                          {fieldErrors[`evidences.${index}.title`] && (
+                            <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
+                              <AlertCircle size={10} /> {fieldErrors[`evidences.${index}.title`]}
+                            </p>
+                          )}
+                        </div>
 
                         {/* Type & Polarity */}
                         <div className="flex gap-3">
                           <select
                             value={evidence.type}
-                            onChange={(e) => handleEvidenceChange(index, 'type', e.target.value)}
+                            onChange={(e) =>
+                              handleEvidenceChange(
+                                index,
+                                'type',
+                                e.target.value as EvidenceItem['type'],
+                              )
+                            }
                             className="flex-1 bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 appearance-none cursor-pointer"
                           >
                             {evidenceTypes.map((t) => (
@@ -233,7 +294,11 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
                           <select
                             value={evidence.polarity}
                             onChange={(e) =>
-                              handleEvidenceChange(index, 'polarity', e.target.value)
+                              handleEvidenceChange(
+                                index,
+                                'polarity',
+                                e.target.value as EvidenceItem['polarity'],
+                              )
                             }
                             className="flex-1 bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-200 focus:outline-none focus:border-emerald-500/50 appearance-none cursor-pointer"
                           >
@@ -257,7 +322,8 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
 
                 {/* Error */}
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm">
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm flex items-center gap-2">
+                    <AlertCircle size={16} />
                     {error}
                   </div>
                 )}
