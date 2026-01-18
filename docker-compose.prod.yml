@@ -11,7 +11,7 @@ services:
       - caddy_config:/config
     environment:
       DOMAIN: ${DOMAIN:-ingvarsoloma.dev}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ingvarsoloma.dev}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-ingvar.soloma@gmail.com}
     depends_on:
       - frontend
       - backend
