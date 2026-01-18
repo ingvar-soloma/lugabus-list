@@ -9,7 +9,8 @@
     "dev": "nodemon src/index.ts",
     "tinker": "npx ts-node src/scripts/tinker.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "add-admin": "ts-node src/scripts/add-admin.ts"
+    "add-admin": "ts-node src/scripts/add-admin.ts",
+    "refresh-identities": "ts-node src/scripts/refresh-identities.ts"
   },
   "keywords": [],
   "author": "",
