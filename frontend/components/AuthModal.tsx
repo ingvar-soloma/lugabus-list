@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { X, User as UserIcon, Lock, ArrowRight, Loader } from 'lucide-react';
 import { apiService } from '../services/apiService';
 import TelegramLogin from './TelegramLogin';
@@ -14,7 +14,7 @@ interface AuthModalProps {
 type AuthMode = 'login' | 'register';
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { setUser: setAppUser } = useAppContext();
+  const { setUser: setAppUser, login: appLogin } = useAppContext();
   const [mode, setMode] = useState<AuthMode>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,8 +22,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    firstName: '',
-    lastName: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,14 +45,24 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleTelegramAuth = async (user: User) => {
-    setAppUser(user);
-    onClose();
-  };
+  const handleTelegramAuth = useCallback(
+    async (data: Record<string, unknown>) => {
+      setLoading(true);
+      setError(null);
+      try {
+        await appLogin(data);
+        onClose();
+      } catch (err) {
+        setError((err as Error).message || 'Telegram login failed');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [appLogin, onClose],
+  );
 
   if (!isOpen) return null;
 
-  // @ts-expect-error: Framer Motion type mismatch with React 19
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <motion.div
@@ -127,37 +135,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
 
-            <AnimatePresence>
-              {mode === 'register' && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="space-y-4 overflow-hidden"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Ім'я (опціонально)"
-                      value={formData.firstName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setFormData({ ...formData, firstName: e.target.value })
-                      }
-                      className="w-full bg-black/20 border border-white/10 rounded-xl py-4 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Прізвище (опціонально)"
-                      value={formData.lastName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setFormData({ ...formData, lastName: e.target.value })
-                      }
-                      className="w-full bg-black/20 border border-white/10 rounded-xl py-4 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Name fields removed as identities are now generated automatically */}
           </div>
 
           {error && (
@@ -204,7 +182,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               onClick={() => {
                 setMode(mode === 'login' ? 'register' : 'login');
                 setError(null);
-                setFormData({ username: '', password: '', firstName: '', lastName: '' });
+                setFormData({ username: '', password: '' });
               }}
               className="text-emerald-500 hover:text-emerald-400 font-bold transition-colors"
             >

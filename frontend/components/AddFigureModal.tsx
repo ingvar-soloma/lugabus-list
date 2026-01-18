@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, UserPlus, Info } from 'lucide-react';
-import { apiService } from '../services/apiService';
+import { X, Send, UserPlus, Info, AlertCircle } from 'lucide-react';
+import { apiService, ApiError } from '../services/apiService';
+import { useAppContext } from '../store/AppContext';
 
 interface AddFigureModalProps {
   isOpen: boolean;
@@ -18,18 +19,36 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const { showToast, refreshData } = useAppContext();
+
+  const getFieldError = (field: string) => fieldErrors[field];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setFieldErrors({});
+
     try {
       await apiService.createFigure(formData);
+      showToast('Особу успішно додано та відправлено на модерацію');
+      refreshData();
       onSuccess();
       onClose();
       setFormData({ name: '', role: '', statement: '', rating: 0 });
     } catch (err) {
-      setError((err as Error).message || 'Помилка при додаванні');
+      if (err instanceof ApiError && err.errors) {
+        const errors: Record<string, string> = {};
+        err.errors.forEach((e) => {
+          errors[e.field] = e.message;
+        });
+        setFieldErrors(errors);
+        setError('Перевірте правильність заповнення полів');
+      } else {
+        setError((err as Error).message || 'Помилка при додаванні');
+        showToast((err as Error).message || 'Помилка при додаванні', 'error');
+      }
     } finally {
       setLoading(false);
     }
@@ -96,9 +115,14 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium"
+                className={`w-full bg-zinc-900 border ${getFieldError('name') ? 'border-red-500/50' : 'border-white/5'} rounded-2xl p-4 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium`}
                 placeholder="Введіть повне ім'я..."
               />
+              {getFieldError('name') && (
+                <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
+                  <AlertCircle size={10} /> {getFieldError('name')}
+                </p>
+              )}
             </div>
 
             <div>
@@ -114,9 +138,14 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 type="text"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium"
+                className={`w-full bg-zinc-900 border ${getFieldError('role') ? 'border-red-500/50' : 'border-white/5'} rounded-2xl p-4 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium`}
                 placeholder="Наприклад: Депутат, Журналіст..."
               />
+              {getFieldError('role') && (
+                <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
+                  <AlertCircle size={10} /> {getFieldError('role')}
+                </p>
+              )}
             </div>
 
             <div>
@@ -131,9 +160,14 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 required
                 value={formData.statement}
                 onChange={(e) => setFormData({ ...formData, statement: e.target.value })}
-                className="w-full bg-zinc-900 border border-white/5 rounded-2xl p-4 h-32 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium"
+                className={`w-full bg-zinc-900 border ${getFieldError('statement') ? 'border-red-500/50' : 'border-white/5'} rounded-2xl p-4 h-32 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium`}
                 placeholder="Опишіть діяльність особи або її основні заяви..."
               ></textarea>
+              {getFieldError('statement') && (
+                <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
+                  <AlertCircle size={10} /> {getFieldError('statement')}
+                </p>
+              )}
             </div>
 
             <div className="flex items-center space-x-4 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">

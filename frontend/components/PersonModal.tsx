@@ -1,4 +1,4 @@
-// React import removed because it was unused
+import { useState, useEffect } from 'react';
 import { Person, PoliticalPosition } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,8 +10,16 @@ import {
   ShieldCheck,
   ShieldAlert,
   ShieldQuestion,
+  Brain,
+  Link2,
+  FileText,
+  Image,
+  Video,
+  Vote,
 } from 'lucide-react';
 import { apiService } from '../services/apiService';
+import { useAppContext } from '../store/AppContext';
+import AddEvidenceModal from './AddEvidenceModal';
 
 interface PersonModalProps {
   person: Person | null;
@@ -19,10 +27,41 @@ interface PersonModalProps {
 }
 
 const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
+  const [isAddEvidenceOpen, setIsAddEvidenceOpen] = useState(false);
+  const { showToast, refreshData } = useAppContext();
+
+  useEffect(() => {
+    if (person) {
+      const startTime = Date.now();
+      return () => {
+        const timeSpent = Date.now() - startTime;
+        apiService.trackVisit(person.id, timeSpent);
+      };
+    }
+  }, [person]);
+
   if (!person) return null;
 
   const handleVote = async (proofId: string, type: 'like' | 'dislike') => {
-    await apiService.voteProof(proofId, type);
+    try {
+      await apiService.voteProof(proofId, type);
+      showToast(type === 'like' ? 'Дякуємо за голос!' : 'Висловили сумнів', 'info');
+      refreshData();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Помилка при голосуванні';
+      showToast(message, 'error');
+    }
+  };
+
+  const handlePriorityVote = async () => {
+    try {
+      await apiService.voteForDeepCheck(person.id);
+      showToast('Голос за глибоку перевірку зараховано', 'success');
+      refreshData();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Помилка при голосуванні';
+      showToast(message, 'error');
+    }
   };
 
   return (
@@ -45,11 +84,18 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
           {/* Header */}
           <div className="p-8 border-b border-white/5 flex justify-between items-start bg-white/5">
             <div className="flex space-x-8">
-              <img
-                src={person.avatar}
-                alt={person.name}
-                className="w-28 h-28 rounded-3xl object-cover ring-1 ring-white/10 shadow-xl"
-              />
+              {person.avatarSvg ? (
+                <div
+                  className="w-28 h-28 rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl"
+                  dangerouslySetInnerHTML={{ __html: person.avatarSvg }}
+                />
+              ) : (
+                <img
+                  src={person.avatar}
+                  alt={person.name}
+                  className="w-28 h-28 rounded-3xl object-cover ring-1 ring-white/10 shadow-xl"
+                />
+              )}
               <div className="flex flex-col justify-center">
                 <h2 className="text-4xl font-black tracking-tighter mb-1">{person.name}</h2>
                 <p className="text-emerald-500 text-xs font-black uppercase tracking-[0.2em] mb-4">
@@ -74,12 +120,21 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                 </div>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400"
-            >
-              <X size={20} />
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handlePriorityVote}
+                className="bg-purple-500/10 text-purple-400 px-4 py-2.5 rounded-2xl text-[10px] font-black tracking-widest border border-purple-500/20 uppercase flex items-center hover:bg-purple-500 hover:text-white transition-all shadow-lg hover:shadow-purple-500/20"
+                title="Підняти в рейтингу для глибокої перевірки"
+              >
+                <Brain className="mr-2" size={14} /> Глибока перевірка
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400"
+              >
+                <X size={20} />
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto p-8 space-y-10">
@@ -138,40 +193,86 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                   Матеріали та докази
                 </h4>
                 <div className="space-y-4">
-                  {person.proofs.map((proof) => (
-                    <div
-                      key={proof.id}
-                      className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 group hover:border-emerald-500/20 transition-all"
-                    >
-                      <p className="text-sm text-zinc-200 mb-4 leading-relaxed font-medium">
-                        {proof.text}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <a
-                          href={proof.sourceUrl}
-                          className="text-[10px] text-emerald-500 flex items-center hover:underline font-black uppercase tracking-widest"
-                        >
-                          <ExternalLink size={12} className="mr-1.5" /> Посилання
-                        </a>
-                        <div className="flex items-center space-x-3">
-                          <button
-                            onClick={() => handleVote(proof.id, 'like')}
-                            className="flex items-center space-x-1.5 text-xs text-emerald-400/60 hover:text-emerald-400 transition-colors"
+                  {person.proofs.map((proof) => {
+                    const getIcon = () => {
+                      switch (proof.type) {
+                        case 'IMAGE':
+                          return <Image size={14} />;
+                        case 'DOCUMENT':
+                          return <FileText size={14} />;
+                        case 'VIDEO':
+                          return <Video size={14} />;
+                        case 'VOTE_RECORD':
+                          return <Vote size={14} />;
+                        default:
+                          return <Link2 size={14} />;
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={proof.id}
+                        className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 group hover:border-emerald-500/20 transition-all"
+                      >
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-2 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                              {getIcon()}
+                              <span className="text-[10px] font-black uppercase tracking-widest">
+                                {proof.type || 'LINK'}
+                              </span>
+                            </div>
+
+                            {proof.submittedBy && (
+                              <div className="flex items-center space-x-2 bg-white/5 pr-3 rounded-full overflow-hidden border border-white/5 group-hover:border-emerald-500/30 transition-all">
+                                <div
+                                  className="w-6 h-6 border-r border-white/10"
+                                  dangerouslySetInnerHTML={{ __html: proof.submittedBy.avatarSvg }}
+                                />
+                                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-tight group-hover:text-emerald-500 transition-colors">
+                                  {proof.submittedBy.nickname}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-zinc-600 font-bold">{proof.date}</span>
+                        </div>
+                        <p className="text-sm text-zinc-200 mb-4 leading-relaxed font-medium">
+                          {proof.text}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <a
+                            href={proof.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-emerald-500 flex items-center hover:underline font-black uppercase tracking-widest"
                           >
-                            <ThumbsUp size={14} /> <span className="font-bold">{proof.likes}</span>
-                          </button>
-                          <button
-                            onClick={() => handleVote(proof.id, 'dislike')}
-                            className="flex items-center space-x-1.5 text-xs text-red-400/60 hover:text-red-400 transition-colors"
-                          >
-                            <ThumbsDown size={14} />{' '}
-                            <span className="font-bold">{proof.dislikes}</span>
-                          </button>
+                            <ExternalLink size={12} className="mr-1.5" /> Джерело
+                          </a>
+                          <div className="flex items-center space-x-3">
+                            <button
+                              onClick={() => handleVote(proof.id, 'like')}
+                              className="flex items-center space-x-1.5 text-xs text-emerald-400/60 hover:text-emerald-400 transition-colors"
+                            >
+                              <ThumbsUp size={14} />{' '}
+                              <span className="font-bold">{proof.likes}</span>
+                            </button>
+                            <button
+                              onClick={() => handleVote(proof.id, 'dislike')}
+                              className="flex items-center space-x-1.5 text-xs text-red-400/60 hover:text-red-400 transition-colors"
+                            >
+                              <ThumbsDown size={14} />{' '}
+                              <span className="font-bold">{proof.dislikes}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                  <button className="w-full py-5 border border-dashed border-zinc-800 rounded-2xl text-zinc-600 hover:text-emerald-500 hover:border-emerald-500/50 transition-all font-black text-xs tracking-widest uppercase">
+                    );
+                  })}
+                  <button
+                    onClick={() => setIsAddEvidenceOpen(true)}
+                    className="w-full py-5 border border-dashed border-zinc-800 rounded-2xl text-zinc-600 hover:text-emerald-500 hover:border-emerald-500/50 transition-all font-black text-xs tracking-widest uppercase"
+                  >
                     Запропонувати доказ
                   </button>
                 </div>
@@ -180,6 +281,14 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
           </div>
         </motion.div>
       </div>
+
+      <AddEvidenceModal
+        personId={person.id}
+        personName={person.name}
+        isOpen={isAddEvidenceOpen}
+        onClose={() => setIsAddEvidenceOpen(false)}
+        onSuccess={() => refreshData()}
+      />
     </AnimatePresence>
   );
 };

@@ -19,17 +19,23 @@ export interface Proof {
   likes: number;
   dislikes: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EDITS_REQUIRED';
-  submittedBy?: string; // Анонімний ID користувача
+  type?: 'LINK' | 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'VOTE_RECORD';
+  submittedBy?: {
+    nickname: string;
+    avatarSvg: string;
+  };
 }
 
 export interface AuditLog {
   id: string;
-  adminId: string;
-  adminName: string;
+  userId: string;
+  adminName?: string;
   action: string;
-  targetId: string;
-  targetName: string;
-  timestamp: string;
+  targetId?: string;
+  targetName?: string;
+  details?: Record<string, unknown>;
+  createdAt: string;
+  timestamp?: string; // Compatibility with legacy bits
 }
 
 export interface AIInsight {
@@ -53,6 +59,7 @@ export interface Person {
   name: string;
   description: string;
   avatar: string;
+  avatarSvg?: string;
   category: string;
   position: PoliticalPosition;
   score: number;
@@ -67,9 +74,35 @@ export interface User {
   username: string;
   role: UserRole;
   avatar?: string;
+  avatarSvg?: string;
+  nickname?: string;
   email?: string;
-  createdAt?: string;
+  firstName?: string;
+  lastName?: string;
+  createdAt: string;
   submissionsCount?: number;
+  reputation?: number;
+}
+
+export interface Revision {
+  id: string;
+  personId: string;
+  person?: {
+    name: string;
+  };
+  reason: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  evidences?: Array<{
+    url: string;
+    title?: string;
+    type: string;
+    polarity: string;
+  }>;
+  authorIdentity?: {
+    nickname: string;
+    avatarSvg: string;
+  };
+  createdAt: string;
 }
 
 export interface Stats {

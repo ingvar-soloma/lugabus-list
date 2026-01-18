@@ -1,10 +1,9 @@
 import * as React from 'react';
 import { useEffect, useRef } from 'react';
-import { User } from '../types';
 
 interface Props {
   botName: string;
-  onAuth: (user: User) => void;
+  onAuth: (data: Record<string, unknown>) => void;
   buttonSize?: 'large' | 'medium' | 'small';
   cornerRadius?: number;
   requestAccess?: boolean;
@@ -20,9 +19,11 @@ const TelegramLogin: React.FC<Props> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    globalThis.onTelegramAuth = (user: Record<string, unknown>) => {
-      onAuth(user as unknown as User);
+    globalThis.onTelegramAuth = (data: Record<string, unknown>) => {
+      onAuth(data);
     };
+
+    console.debug('TelegramLogin', botName);
 
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Person, Stats } from '../types';
 import { apiService } from '../services/apiService';
+import { ToastContainer, ToastType } from '../components/Toast';
 
 interface AppContextType {
   user: User | null;
@@ -11,6 +12,7 @@ interface AppContextType {
   login: (telegramData: Record<string, unknown>) => Promise<void>;
   logout: () => void;
   refreshData: () => Promise<void>;
+  showToast: (message: string, type?: ToastType) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -20,6 +22,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [people, setPeople] = useState<Person[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [toasts, setToasts] = useState<{ id: string; message: string; type: ToastType }[]>([]);
+
+  const showToast = (message: string, type: ToastType = 'success') => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   const refreshData = async () => {
     setLoading(true);
@@ -41,25 +53,40 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       const userData = await apiService.handleTelegramLogin(telegramData);
       setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      showToast('Вхід виконано успішно');
     } catch (error) {
       console.error('Login failed', error);
+      showToast('Помилка при вході', 'error');
+      throw error;
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
+    showToast('Ви вийшли з аккаунту', 'info');
   };
 
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+
       if (token) {
         try {
           const userData = await apiService.getMe();
           setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
         } catch {
           localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
         }
       }
       refreshData();
@@ -67,11 +94,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     initAuth();
   }, []);
 
+  const contextValue = React.useMemo(
+    () => ({ user, setUser, people, stats, loading, login, logout, refreshData, showToast }),
+    [user, people, stats, loading, showToast],
+  );
+
   return (
-    <AppContext.Provider
-      value={{ user, setUser, people, stats, loading, login, logout, refreshData }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </AppContext.Provider>
   );
 };

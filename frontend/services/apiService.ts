@@ -1,4 +1,4 @@
-import { Person, Stats, User, AuditLog, AIInsight } from '../types';
+import { Person, Stats, User, AuditLog, AIInsight, Revision } from '../types';
 
 const API_BASE_URL = '/api';
 
@@ -12,8 +12,17 @@ class ApiService {
   }
 
   async fetchPeople(): Promise<Person[]> {
-    const response = await fetch(`${API_BASE_URL}/figures`);
-    if (!response.ok) throw new Error('Failed to fetch people');
+    const response = await fetch(`${API_BASE_URL}/figures`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.message || 'Failed to fetch people',
+        response.status,
+        errorData.errors,
+      );
+    }
     return response.json();
   }
 
@@ -28,7 +37,14 @@ class ApiService {
       headers: this.getHeaders(),
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Failed to create figure');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(
+        errorData.message || 'Failed to create figure',
+        response.status,
+        errorData.errors,
+      );
+    }
     return response.json();
   }
 
@@ -46,12 +62,7 @@ class ApiService {
     return response.json();
   }
 
-  async register(data: {
-    username: string;
-    password?: string;
-    firstName?: string;
-    lastName?: string;
-  }): Promise<User> {
+  async register(data: { username: string; password?: string }): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -104,34 +115,15 @@ class ApiService {
   }
 
   async getMe(): Promise<User> {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('No token');
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: this.getHeaders(),
+    });
 
-    // Robust JWT decoding that handles Base64Url
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replaceAll('-', '+').replaceAll('_', '/');
-      const jsonPayload = decodeURIComponent(
-        globalThis
-          .atob(base64)
-          .split('')
-          .map(function (c) {
-            return '%' + ('00' + (c.codePointAt(0)?.toString(16) || '00')).slice(-2);
-          })
-          .join(''),
-      );
-
-      const payload = JSON.parse(jsonPayload);
-      return {
-        id: payload.id,
-        username: payload.username,
-        role: payload.role,
-        avatar: payload.avatar,
-      };
-    } catch (e) {
-      console.error('Failed to decode token', e);
-      throw e;
+    if (!response.ok) {
+      throw new Error('Failed to fetch user profile');
     }
+
+    return response.json();
   }
 
   async fetchAuditLogs(): Promise<AuditLog[]> {
@@ -151,12 +143,150 @@ class ApiService {
   }
 
   async voteProof(proofId: string, type: 'like' | 'dislike'): Promise<boolean> {
-    const response = await fetch(`${API_BASE_URL}/proofs/${proofId}/vote`, {
+    const response = await fetch(`${API_BASE_URL}/evidence/${proofId}/vote`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify({ type }),
+      body: JSON.stringify({ type: type.toUpperCase() }),
     });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(errorData.message || 'Failed to vote', response.status, errorData.errors);
+    }
     return response.ok;
+  }
+
+  async voteForDeepCheck(personId: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/figures/${personId}/priority`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(
+        errorData.message || 'Failed to vote for priority',
+        response.status,
+        errorData.errors,
+      );
+    }
+  }
+
+  async fetchPendingRevisions(): Promise<Revision[]> {
+    const response = await fetch(`${API_BASE_URL}/revisions/pending`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(
+        errorData.message || 'Failed to fetch pending revisions',
+        response.status,
+        errorData.errors,
+      );
+    }
+    return response.json();
+  }
+
+  async approveRevision(
+    revisionId: string,
+    data?: { aiScore?: number; comment?: string },
+  ): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/revisions/${revisionId}/approve`, {
+      method: 'PATCH',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data || {}),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(
+        errorData.message || 'Failed to approve revision',
+        response.status,
+        errorData.errors,
+      );
+    }
+  }
+
+  async rejectRevision(revisionId: string, reason: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/revisions/${revisionId}/reject`, {
+      method: 'PATCH',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ reason }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(
+        errorData.message || 'Failed to reject revision',
+        response.status,
+        errorData.errors,
+      );
+    }
+  }
+
+  async trackVisit(personId: string, timeSpentMs: number): Promise<void> {
+    await fetch(`${API_BASE_URL}/figures/${personId}/visit`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ timeSpentMs }),
+    }).catch(() => {}); // Silent failure for analytics
+  }
+
+  /**
+   * Create a revision with evidence for a person
+   */
+  async createRevision(data: {
+    personId: string;
+    proposedData: Record<string, unknown>;
+    reason?: string;
+    evidences?: Array<{
+      url: string;
+      title?: string;
+      type?: 'LINK' | 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'VOTE_RECORD';
+      polarity?: 'SUPPORT' | 'REFUTE';
+    }>;
+  }): Promise<unknown> {
+    const response = await fetch(`${API_BASE_URL}/revisions`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new ApiError(
+        errorData.message || 'Failed to create revision',
+        response.status,
+        errorData.errors,
+      );
+    }
+
+    return response.json();
+  }
+
+  async generateRandomFigure(): Promise<Person> {
+    const response = await fetch(`${API_BASE_URL}/admin/persons/generate-random`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to generate person');
+    return response.json();
+  }
+
+  async deleteFigure(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/admin/persons/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete figure');
+  }
+}
+
+export class ApiError extends Error {
+  errors?: { field: string; message: string }[];
+  status?: number;
+
+  constructor(message: string, status?: number, errors?: { field: string; message: string }[]) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.errors = errors;
   }
 }
 

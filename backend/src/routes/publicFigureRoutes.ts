@@ -86,5 +86,6 @@ router.get('/stats', controller.getStats);
  *         description: Public figure not found.
  */
 router.get('/:id', validate(getPublicFigureByIdSchema), controller.getById);
+router.post('/:id/visit', validate(getPublicFigureByIdSchema), controller.trackVisit);
 
 export default router;

@@ -4,6 +4,8 @@ import { Status, Polarity, EvidenceType, Prisma } from '@prisma/client';
 export interface CreateRevisionData {
   personId: string;
   authorId: string;
+  status?: Status;
+  hashedIp?: string;
   // JSON data for the revision
   proposedData: Prisma.InputJsonValue;
   reason?: string;
@@ -28,7 +30,8 @@ export class EvidenceRepository extends BaseRepository {
           authorId: data.authorId,
           proposedData: data.proposedData,
           reason: data.reason,
-          status: Status.PENDING,
+          status: data.status || Status.PENDING,
+          hashedIp: data.hashedIp,
 
           // 2. Create nested evidences
           evidences: {
@@ -69,12 +72,30 @@ export class EvidenceRepository extends BaseRepository {
         author: {
           select: {
             id: true,
-            username: true,
             reputation: true,
           },
         },
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async vote(evidenceId: string, userId: string, isUpvote: boolean) {
+    return this.prisma.evidenceVote.upsert({
+      where: {
+        userId_evidenceId: {
+          userId,
+          evidenceId,
+        },
+      },
+      update: {
+        isUpvote,
+      },
+      create: {
+        evidenceId,
+        userId,
+        isUpvote,
+      },
     });
   }
 }
