@@ -34,7 +34,11 @@ interface MappedHistory {
 }
 
 export class PublicFigureRepository extends BaseRepository {
-  async getAll(options: { where?: object; orderBy?: object }, isAdmin = false) {
+  async getAll(
+    options: { where?: object; orderBy?: object },
+    isAdmin = false,
+    isAuthenticated = false,
+  ) {
     const figures = await this.prisma.person.findMany({
       ...options,
       where: isAdmin ? options.where : { ...(options.where ?? {}), status: Status.APPROVED },
@@ -50,10 +54,12 @@ export class PublicFigureRepository extends BaseRepository {
       },
     });
 
-    return (figures as PersonWithRevisions[]).map((f) => this.mapToPerson(f));
+    return (figures as PersonWithRevisions[]).map((f) =>
+      this.mapToPerson(f, isAdmin, isAuthenticated),
+    );
   }
 
-  async getById(id: string, isAdmin = false) {
+  async getById(id: string, isAdmin = false, isAuthenticated = false) {
     const figure = await this.prisma.person.findUnique({
       where: { id },
       include: {
@@ -67,7 +73,9 @@ export class PublicFigureRepository extends BaseRepository {
         },
       },
     });
-    return figure ? this.mapToPerson(figure as PersonWithRevisions) : null;
+    return figure
+      ? this.mapToPerson(figure as PersonWithRevisions, isAdmin, isAuthenticated)
+      : null;
   }
 
   async getRawById(id: string) {
@@ -76,7 +84,7 @@ export class PublicFigureRepository extends BaseRepository {
     });
   }
 
-  private mapToPerson(figure: PersonWithRevisions) {
+  private mapToPerson(figure: PersonWithRevisions, isAdmin = false, isAuthenticated = false) {
     let position = 'NEUTRAL';
     if (figure.reputation > 0) {
       position = 'SUPPORT';
@@ -120,8 +128,11 @@ export class PublicFigureRepository extends BaseRepository {
 
     return {
       id: figure.id,
-      name: figure.fullName,
-      description: figure.bio,
+      name: isAuthenticated || isAdmin ? figure.fullName : identity.nickname,
+      description:
+        isAuthenticated || isAdmin
+          ? figure.bio
+          : 'Конфіденційна інформація. Будь ласка, авторизуйтесь для перегляду.',
       avatar: figure.photoUrl || `https://picsum.photos/seed/${figure.id}/200/200`,
       avatarSvg: identity.svg,
       category: figure.currentRole,
