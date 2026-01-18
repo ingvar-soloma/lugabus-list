@@ -71,13 +71,13 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-xl glass rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl border border-white/10"
+          className="relative w-full max-w-xl bg-zinc-950 overflow-hidden flex flex-col shadow-2xl border border-white/10"
         >
           {/* Header */}
           <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
             <div className="flex items-center space-x-4">
-              <div className="bg-emerald-500/20 p-3 rounded-2xl">
-                <UserPlus size={24} className="text-emerald-500" />
+              <div className="bg-red-900/20 p-3 rounded-none">
+                <UserPlus size={24} className="text-red-500" />
               </div>
               <div>
                 <h2 className="text-2xl font-black tracking-tighter">ДОДАТИ ОСОБУ</h2>
@@ -97,7 +97,7 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
 
           <form onSubmit={handleSubmit} className="p-8 space-y-6">
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-400 text-xs font-bold uppercase tracking-widest flex items-center">
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-none text-red-400 text-xs font-bold uppercase tracking-widest flex items-center">
                 <Info size={16} className="mr-2" /> {error}
               </div>
             )}
@@ -115,7 +115,7 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full bg-zinc-900 border ${getFieldError('name') ? 'border-red-500/50' : 'border-white/5'} rounded-2xl p-4 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium`}
+                className={`w-full bg-zinc-900 border ${getFieldError('name') ? 'border-red-500/50' : 'border-white/5'} rounded-none p-4 focus:ring-2 ring-red-500/50 outline-none transition-all font-medium`}
                 placeholder="Введіть повне ім'я..."
               />
               {getFieldError('name') && (
@@ -138,7 +138,7 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 type="text"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                className={`w-full bg-zinc-900 border ${getFieldError('role') ? 'border-red-500/50' : 'border-white/5'} rounded-2xl p-4 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium`}
+                className={`w-full bg-zinc-900 border ${getFieldError('role') ? 'border-red-500/50' : 'border-white/5'} rounded-none p-4 focus:ring-2 ring-red-500/50 outline-none transition-all font-medium`}
                 placeholder="Наприклад: Депутат, Журналіст..."
               />
               {getFieldError('role') && (
@@ -160,7 +160,7 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                 required
                 value={formData.statement}
                 onChange={(e) => setFormData({ ...formData, statement: e.target.value })}
-                className={`w-full bg-zinc-900 border ${getFieldError('statement') ? 'border-red-500/50' : 'border-white/5'} rounded-2xl p-4 h-32 focus:ring-2 ring-emerald-500/50 outline-none transition-all font-medium`}
+                className={`w-full bg-zinc-900 border ${getFieldError('statement') ? 'border-red-500/50' : 'border-white/5'} rounded-none p-4 h-32 focus:ring-2 ring-red-500/50 outline-none transition-all font-medium`}
                 placeholder="Опишіть діяльність особи або її основні заяви..."
               ></textarea>
               {getFieldError('statement') && (
@@ -170,15 +170,15 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
               )}
             </div>
 
-            <div className="flex items-center space-x-4 p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+            <div className="flex items-center space-x-4 p-4 bg-red-900/5 rounded-none border border-red-900/10">
               <div className="flex-1">
                 <label
                   htmlFor="rating"
-                  className="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1 block"
+                  className="text-[10px] font-black uppercase tracking-widest text-red-500 mb-1 block"
                 >
                   Попередня оцінка
                 </label>
-                <p className="text-[9px] text-emerald-500/50 leading-tight uppercase font-bold">
+                <p className="text-[9px] text-red-500/50 leading-tight uppercase font-bold">
                   Оцінка від -100 (зрада) до +100 (підтримка)
                 </p>
               </div>
@@ -192,14 +192,14 @@ const AddFigureModal: React.FC<AddFigureModalProps> = ({ isOpen, onClose, onSucc
                   const val = Number.parseInt(e.target.value);
                   setFormData({ ...formData, rating: Number.isNaN(val) ? 0 : val });
                 }}
-                className="w-24 bg-zinc-900 border border-white/10 rounded-xl p-3 text-center font-black text-emerald-500 outline-none focus:ring-2 ring-emerald-500/30"
+                className="w-24 bg-zinc-900 border border-white/10 rounded-none p-3 text-center font-black text-red-500 outline-none focus:ring-2 ring-red-900/30"
               />
             </div>
 
             <button
               disabled={loading}
               type="submit"
-              className="w-full bg-emerald-500 disabled:bg-emerald-500/20 disabled:text-zinc-500 text-zinc-950 py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-emerald-400 transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center space-x-3"
+              className="w-full bg-red-700 disabled:bg-red-900/20 disabled:text-zinc-500 text-white py-5 rounded-none font-black uppercase tracking-widest hover:bg-red-600 transition-all shadow-xl shadow-red-500/20 active:scale-95 flex items-center justify-center space-x-3"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-zinc-950 border-t-transparent rounded-full animate-spin"></div>

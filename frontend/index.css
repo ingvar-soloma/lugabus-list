@@ -3,12 +3,14 @@
 @theme {
   --font-inter: 'Inter', sans-serif;
   --font-montserrat: 'Montserrat', sans-serif;
-  --color-primary: #2563eb;
-  --color-primary-light: #60a5fa;
-  --color-base: #0f172a;
-  --color-muted: #64748b;
-  --color-danger: #be123c;
+  --color-primary: #b91c1c; /* red-700 */
+  --color-primary-light: #ef4444; /* red-500 */
+  --color-base: #09090b; /* zinc-950 */
+  --color-muted: #71717a; /* zinc-500 */
+  --color-danger: #991b1b; /* red-800 */
   --color-zinc-950: #09090b;
+  --color-zinc-900: #18181b;
+  --color-zinc-800: #27272a;
 }
 
 @layer base {
@@ -36,11 +38,17 @@
 
 @layer components {
   .glass {
-    @apply bg-white/5 backdrop-blur-2xl border border-white/10 shadow-xl;
+    @apply backdrop-blur-xl border shadow-2xl transition-all duration-300;
+    @apply bg-white/70 border-zinc-200;
+  }
+  
+  .dark .glass {
+    @apply bg-zinc-900/40 border-white/5;
   }
 
   .glass-hover {
-    @apply hover:bg-white/10 hover:shadow-emerald-500/5 hover:shadow-2xl transition-all duration-500;
+    @apply hover:shadow-red-500/5 hover:shadow-2xl transition-all duration-500;
+    @apply dark:hover:bg-white/10 hover:bg-zinc-100/50;
   }
 
   .no-scrollbar::-webkit-scrollbar {

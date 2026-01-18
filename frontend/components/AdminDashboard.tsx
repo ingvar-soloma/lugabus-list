@@ -87,11 +87,11 @@ const AdminDashboard: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass rounded-[2rem] overflow-hidden border-white/5"
+      className="bg-zinc-950 rounded-none overflow-hidden border border-white/5"
     >
       <div className="p-8 border-b border-white/5 bg-white/5 flex flex-col xl:flex-row justify-between items-center gap-6">
         <h2 className="text-2xl font-black tracking-tighter uppercase flex items-center">
-          <ShieldCheck className="mr-3 text-emerald-500" size={24} />
+          <ShieldCheck className="mr-3 text-red-600" size={24} />
           Система Керування
         </h2>
         <div className="flex bg-zinc-900 p-1.5 rounded-2xl border border-white/5 flex-wrap justify-center">
@@ -107,7 +107,7 @@ const AdminDashboard: React.FC = () => {
               onClick={() =>
                 setActiveTab(tab.id as 'proofs' | 'entities' | 'audit' | 'ai' | 'users')
               }
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-emerald-500 text-zinc-950 shadow-lg shadow-emerald-500/20' : 'text-zinc-500 hover:text-zinc-300'}`}
+              className={`px-4 py-2 rounded-none text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-red-700 text-white shadow-lg shadow-red-900/20' : 'text-zinc-500 hover:text-zinc-300'}`}
             >
               <tab.icon size={14} className="inline mr-2" />
               {tab.label}
@@ -119,7 +119,7 @@ const AdminDashboard: React.FC = () => {
       <div className="p-8 min-h-[500px]">
         {loading ? (
           <div className="flex items-center justify-center h-full min-h-[400px]">
-            <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <>
@@ -136,12 +136,12 @@ const AdminDashboard: React.FC = () => {
                 {revisions.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-zinc-900/40 p-6 rounded-2xl border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center group hover:border-emerald-500/20 transition-all"
+                    className="bg-zinc-900/40 p-6 rounded-none border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center group hover:border-red-500/20 transition-all font-montserrat"
                   >
                     <div className="mb-6 lg:mb-0">
                       <div className="flex items-center space-x-3 mb-3">
                         <div className="flex items-center space-x-2">
-                          <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">
+                          <p className="text-[10px] text-red-500 font-black uppercase tracking-widest">
                             Об'єкт: {item.person?.name || 'Н/Д'}
                           </p>
                           <span className="text-[9px] text-zinc-600 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
@@ -178,13 +178,13 @@ const AdminDashboard: React.FC = () => {
                     <div className="flex space-x-3 w-full lg:w-auto">
                       <button
                         onClick={() => handleApprove(item.id)}
-                        className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-emerald-500/10 text-emerald-500 rounded-xl hover:bg-emerald-500 hover:text-zinc-950 transition-all font-black text-[10px] uppercase tracking-widest border border-emerald-500/20"
+                        className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-red-700/10 text-red-500 rounded-none hover:bg-red-700 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-red-700/20"
                       >
                         <CheckCircle size={14} /> <span>ЗАТВЕРДИТИ</span>
                       </button>
                       <button
                         onClick={() => handleReject(item.id)}
-                        className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-red-500/20"
+                        className="flex-1 lg:flex-none flex items-center justify-center space-x-2 px-5 py-3 bg-red-500/10 text-red-500 rounded-none hover:bg-red-500 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest border border-red-500/20"
                       >
                         <XCircle size={14} /> <span>ВІДХИЛИТИ</span>
                       </button>
@@ -211,11 +211,11 @@ const AdminDashboard: React.FC = () => {
                           showToast('Помилка генерації', 'error');
                         }
                       }}
-                      className="px-4 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-all"
+                      className="px-4 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-none text-[10px] font-black uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-all"
                     >
                       🎲 Згенерувати
                     </button>
-                    <button className="px-4 py-2 bg-emerald-500 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                    <button className="px-4 py-2 bg-red-500 text-zinc-950 rounded-none text-[10px] font-black uppercase tracking-widest">
                       + Додати особу
                     </button>
                   </div>
@@ -244,11 +244,11 @@ const AdminDashboard: React.FC = () => {
                             if (p.position === 'BETRAYAL') {
                               positionClass = 'bg-red-500/10 text-red-500';
                             } else if (p.position === 'SUPPORT') {
-                              positionClass = 'bg-emerald-500/10 text-emerald-500';
+                              positionClass = 'bg-zinc-500/10 text-zinc-500';
                             }
                             return (
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${positionClass}`}
+                                className={`px-2 py-0.5 rounded-none text-[9px] font-black uppercase tracking-widest ${positionClass}`}
                               >
                                 {p.position}
                               </span>
@@ -257,7 +257,7 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="py-5 px-4 text-right">
                           <div className="flex justify-end space-x-2">
-                            <button className="p-2 text-zinc-500 hover:text-emerald-500">
+                            <button className="p-2 text-zinc-500 hover:text-red-500">
                               <Edit3 size={16} />
                             </button>
                             <button
@@ -336,13 +336,13 @@ const AdminDashboard: React.FC = () => {
                           {(() => {
                             let roleClass = 'bg-zinc-800 text-zinc-400';
                             if (u.role === 'ADMIN') {
-                              roleClass = 'bg-emerald-500/10 text-emerald-500';
+                              roleClass = 'bg-red-500/10 text-red-500';
                             } else if (u.role === 'MODERATOR') {
-                              roleClass = 'bg-blue-500/10 text-blue-400';
+                              roleClass = 'bg-zinc-800 text-zinc-400';
                             }
                             return (
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${roleClass}`}
+                                className={`px-2 py-0.5 rounded-none text-[9px] font-black uppercase tracking-widest ${roleClass}`}
                               >
                                 {u.role}
                               </span>
@@ -355,9 +355,7 @@ const AdminDashboard: React.FC = () => {
                         </td>
                         <td className="py-5 px-4">
                           <div className="flex flex-col leading-none">
-                            <span className="text-emerald-500 font-black text-xs">
-                              {u.reputation}
-                            </span>
+                            <span className="text-red-500 font-black text-xs">{u.reputation}</span>
                             <span className="text-[9px] text-zinc-600 uppercase font-bold mt-1">
                               репутація
                             </span>
@@ -389,15 +387,15 @@ const AdminDashboard: React.FC = () => {
                 {logs.map((log) => (
                   <div
                     key={log.id}
-                    className="bg-zinc-900/20 p-4 rounded-xl border border-white/5 flex justify-between items-center"
+                    className="bg-zinc-900/20 p-4 rounded-none border border-white/5 flex justify-between items-center"
                   >
                     <div className="flex items-center space-x-4">
-                      <div className="w-8 h-8 bg-zinc-800 rounded-lg flex items-center justify-center text-zinc-500">
+                      <div className="w-8 h-8 bg-zinc-800 rounded-none flex items-center justify-center text-zinc-500">
                         <Activity size={16} />
                       </div>
                       <div>
                         <p className="text-xs font-bold">
-                          <span className="text-emerald-500">{log.userId}</span> — {log.action}
+                          <span className="text-red-500">{log.userId}</span> — {log.action}
                         </p>
                         <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest mt-1">
                           Деталі: {JSON.stringify(log.details)}
@@ -426,7 +424,7 @@ const AdminDashboard: React.FC = () => {
                 )}
                 {insights.map((insight) => (
                   <div key={insight.id} className="glass p-6 rounded-3xl border-white/10 relative">
-                    <div className="absolute top-4 right-4 bg-emerald-500/10 text-emerald-500 text-[10px] font-black px-2 py-1 rounded-lg">
+                    <div className="absolute top-4 right-4 bg-red-500/10 text-red-500 text-[10px] font-black px-2 py-1 rounded-none">
                       Confidence: {(insight.confidence * 100).toFixed(0)}%
                     </div>
                     <div className="flex items-start space-x-4">
@@ -439,7 +437,7 @@ const AdminDashboard: React.FC = () => {
                           "{insight.summary}"
                         </p>
                         <div
-                          className={`mt-4 inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${insight.sentiment === 'NEGATIVE' ? 'bg-red-500/10 text-red-500' : 'bg-emerald-500/10 text-emerald-500'}`}
+                          className={`mt-4 inline-block px-3 py-1 rounded-none text-[9px] font-black uppercase tracking-widest ${insight.sentiment === 'NEGATIVE' ? 'bg-red-500/10 text-red-500' : 'bg-red-900/20 text-red-400'}`}
                         >
                           Тональність: {insight.sentiment}
                         </div>
