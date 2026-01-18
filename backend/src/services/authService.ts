@@ -1,11 +1,11 @@
-import { StorageService } from './storageService';
-import logger from '../config/logger';
+import { StorageService } from '@/services/storageService';
+import logger from '@/config/logger';
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../repositories/baseRepository';
-import { encryptJson, decryptJson } from '../utils/crypto';
-import { generateIdentity } from '../utils/identityGenerator';
+import { prisma } from '@/repositories/baseRepository';
+import { encryptJson, decryptJson } from '@/utils/crypto';
+import { generateIdentity } from '@/utils/identityGenerator';
 
 const storageService = new StorageService();
 

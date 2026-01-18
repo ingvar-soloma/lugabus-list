@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/authService';
-import { prisma } from '../repositories/baseRepository';
-import { decryptJson } from '../utils/crypto';
-import { generateIdentity } from '../utils/identityGenerator';
+import { AuthService } from '@/services/authService';
+import { prisma } from '@/repositories/baseRepository';
+import { decryptJson } from '@/utils/crypto';
+import { generateIdentity } from '@/utils/identityGenerator';
 
 interface AuthRequest extends Request {
   user?: {

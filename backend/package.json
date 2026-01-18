@@ -6,16 +6,22 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/src/index.js",
-    "dev": "nodemon src/index.ts",
-    "tinker": "npx ts-node src/scripts/tinker.ts",
+    "dev": "nodemon -r tsconfig-paths/register src/index.ts",
+    "tinker": "ts-node -r tsconfig-paths/register src/scripts/tinker.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "add-admin": "ts-node src/scripts/add-admin.ts"
+    "add-admin": "ts-node -r tsconfig-paths/register src/scripts/add-admin.ts",
+    "refresh-identities": "ts-node -r tsconfig-paths/register src/scripts/refresh-identities.ts"
+  },
+  "_moduleAliases": {
+    "@": "dist/src"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.970.0",
+    "@aws-sdk/lib-storage": "^3.970.0",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "bcrypt": "^6.0.0",
@@ -27,16 +33,16 @@
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.3",
+    "module-alias": "^2.2.3",
+    "multer": "^2.0.2",
     "rate-limit-redis": "^4.3.1",
     "redis": "^5.10.0",
+    "sharp": "^0.34.5",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "tsconfig-paths": "^4.2.0",
     "winston": "^3.19.0",
-    "zod": "^4.3.5",
-    "sharp": "^0.34.5",
-    "@aws-sdk/client-s3": "^3.970.0",
-    "@aws-sdk/lib-storage": "^3.970.0",
-    "multer": "^2.0.2"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
