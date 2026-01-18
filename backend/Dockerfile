@@ -65,6 +65,8 @@ WORKDIR /usr/src/app
 
 # Copy the fully prepared application from builder
 COPY --chown=node:node --from=builder /prod/backend ./
+# Ensure config files are present
+COPY --chown=node:node --from=builder /usr/src/app/backend/prisma.config.js ./
 
 # EXPOSE port
 EXPOSE 8080
