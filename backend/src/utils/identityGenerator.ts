@@ -1,5 +1,13 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import nameDictionary from '../data/name_dictionary.json';
+
+interface Dictionary {
+  adverbs: string[];
+  adjectives: string[];
+  nouns: string[];
+  locations: string[];
+}
+
+const dictionary: Dictionary = nameDictionary;
 
 // Define the paths for the icons (simplified SVG paths)
 // New icons set from user (24x24 source paths)
@@ -47,34 +55,6 @@ const GET_PATTERNS = (id: string, color: string) => [
   },
 ];
 
-interface Dictionary {
-  adverbs: string[];
-  adjectives: string[];
-  nouns: string[];
-  locations: string[];
-}
-
-let dictionary: Dictionary | null = null;
-
-function loadDictionary() {
-  if (dictionary) return dictionary;
-  const dictPath = path.join(__dirname, '../data/name_dictionary.json');
-  try {
-    const content = fs.readFileSync(dictPath, 'utf-8');
-    dictionary = JSON.parse(content);
-    return dictionary!;
-  } catch (error) {
-    console.error('Failed to load name dictionary:', error);
-    // Fallback dictionary in case of error
-    return {
-      adverbs: ['Потужно'],
-      adjectives: ['Потужний'],
-      nouns: ['Боневтік'],
-      locations: ['з Банкової'],
-    };
-  }
-}
-
 export interface IdentityMetadata {
   userId: number;
   originalId: string | number;
@@ -93,7 +73,7 @@ export function generateIdentity(userId: number | string): {
   svg: string;
   metadata: IdentityMetadata;
 } {
-  const dict = loadDictionary();
+  const dict = dictionary;
   const primeSalt = 104729; // A large prime
 
   let numericId: number;
