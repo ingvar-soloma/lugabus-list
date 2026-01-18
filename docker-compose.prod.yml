@@ -10,7 +10,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     environment:
-      DOMAIN: ${DOMAIN:-ingvarsoloma.dev}
+      DOMAIN: ${DOMAIN:-lugalist.ingvarsoloma.dev}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-ingvar.soloma@gmail.com}
     depends_on:
       - frontend
