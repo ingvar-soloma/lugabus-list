@@ -139,13 +139,27 @@ const AdminDashboard: React.FC = () => {
                     className="bg-zinc-900/40 p-6 rounded-2xl border border-white/5 flex flex-col lg:flex-row justify-between items-start lg:items-center group hover:border-emerald-500/20 transition-all"
                   >
                     <div className="mb-6 lg:mb-0">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">
-                          Об'єкт: {item.person?.name || 'Н/Д'}
-                        </p>
-                        <span className="text-[9px] text-zinc-600 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
-                          REVISION ID: {item.id.substring(0, 8)}
-                        </span>
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="flex items-center space-x-2">
+                          <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest">
+                            Об'єкт: {item.person?.name || 'Н/Д'}
+                          </p>
+                          <span className="text-[9px] text-zinc-600 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
+                            REVISION ID: {item.id.substring(0, 8)}
+                          </span>
+                        </div>
+
+                        {item.authorIdentity && (
+                          <div className="flex items-center space-x-2 bg-white/5 pr-2 rounded-full overflow-hidden border border-white/5">
+                            <div
+                              className="w-5 h-5 border-r border-white/10"
+                              dangerouslySetInnerHTML={{ __html: item.authorIdentity.avatarSvg }}
+                            />
+                            <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-tight">
+                              {item.authorIdentity.nickname}
+                            </span>
+                          </div>
+                        )}
                       </div>
                       <p className="text-base text-zinc-200 font-medium leading-relaxed max-w-md">
                         {item.reason || 'Запропоновано зміни до даних або докази'}
@@ -186,9 +200,25 @@ const AdminDashboard: React.FC = () => {
                   <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em]">
                     Реєстр публічних осіб
                   </p>
-                  <button className="px-4 py-2 bg-emerald-500 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-widest">
-                    + Додати особу
-                  </button>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={async () => {
+                        try {
+                          await apiService.generateRandomFigure();
+                          showToast('Випадкову особу додано');
+                          refreshData();
+                        } catch {
+                          showToast('Помилка генерації', 'error');
+                        }
+                      }}
+                      className="px-4 py-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-all"
+                    >
+                      🎲 Згенерувати
+                    </button>
+                    <button className="px-4 py-2 bg-emerald-500 text-zinc-950 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                      + Додати особу
+                    </button>
+                  </div>
                 </div>
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -230,7 +260,20 @@ const AdminDashboard: React.FC = () => {
                             <button className="p-2 text-zinc-500 hover:text-emerald-500">
                               <Edit3 size={16} />
                             </button>
-                            <button className="p-2 text-zinc-500 hover:text-red-500">
+                            <button
+                              onClick={async () => {
+                                if (confirm(`Видалити ${p.name}?`)) {
+                                  try {
+                                    await apiService.deleteFigure(p.id);
+                                    showToast('Особу видалено');
+                                    refreshData();
+                                  } catch {
+                                    showToast('Помилка видалення', 'error');
+                                  }
+                                }
+                              }}
+                              className="p-2 text-zinc-500 hover:text-red-500"
+                            >
                               <Trash2 size={16} />
                             </button>
                           </div>
@@ -262,14 +305,26 @@ const AdminDashboard: React.FC = () => {
                       <tr key={u.id} className="text-sm group hover:bg-white/5 transition-colors">
                         <td className="py-5 px-4">
                           <div className="flex items-center space-x-3">
-                            <img
-                              src={u.avatar}
-                              alt={`${u.username}'s avatar`}
-                              className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/10"
-                            />
+                            {u.avatarSvg ? (
+                              <div
+                                className="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-white/10"
+                                dangerouslySetInnerHTML={{ __html: u.avatarSvg }}
+                              />
+                            ) : (
+                              <img
+                                src={
+                                  u.avatar ||
+                                  `https://ui-avatars.com/api/?name=${u.username}&background=random`
+                                }
+                                alt={`${u.username}'s avatar`}
+                                className="w-8 h-8 rounded-lg object-cover ring-1 ring-white/10"
+                              />
+                            )}
                             <div>
                               <p className="font-black tracking-tight text-zinc-200">
-                                {u.firstName} {u.lastName}
+                                {u.nickname ||
+                                  `${u.firstName || ''} ${u.lastName || ''}`.trim() ||
+                                  u.username}
                               </p>
                               <p className="text-[9px] text-zinc-600 uppercase font-black tracking-widest">
                                 ID: {u.id.substring(0, 8)}

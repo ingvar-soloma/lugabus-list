@@ -5,6 +5,7 @@ import revisionRoutes from './revisionRoutes';
 import adminRoutes from './adminRoutes';
 import authRoutes from './authRoutes';
 import mediaRoutes from './mediaRoutes';
+import evidenceRoutes from './evidenceRoutes';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/revisions', revisionRoutes);
 router.use('/admin', adminRoutes);
 router.use('/auth', authRoutes);
 router.use('/media', mediaRoutes);
+router.use('/evidence', evidenceRoutes);
 
 export default router;

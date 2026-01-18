@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/authService';
 import { prisma } from '../repositories/baseRepository';
 import { decryptJson } from '../utils/crypto';
+import { generateIdentity } from '../utils/identityGenerator';
 
 interface AuthRequest extends Request {
   user?: {
@@ -89,6 +90,7 @@ export class AuthController {
       if (!encryptionKey) throw new Error('ENCRYPTION_KEY is not defined');
 
       const decrypted = decryptJson(user.encryptedData, encryptionKey) as unknown as UserProfile;
+      const identity = generateIdentity(user.id);
 
       res.json({
         id: user.id,
@@ -97,6 +99,8 @@ export class AuthController {
         firstName: decrypted.firstName || decrypted.first_name,
         lastName: decrypted.lastName || decrypted.last_name,
         avatar: decrypted.photoUrl || decrypted.photo_url,
+        nickname: identity.nickname,
+        avatarSvg: identity.svg,
       });
     } catch (error) {
       console.error('Error fetching user profile:', error);

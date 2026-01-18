@@ -33,6 +33,7 @@ router.delete('/evidence/:id', authMiddleware, controller.deleteEvidence);
 
 // ===== PERSON MANAGEMENT =====
 router.get('/persons', authMiddleware, controller.getPersons);
+router.post('/persons/generate-random', authMiddleware, controller.generateRandomPerson);
 router.patch('/persons/:id/status', authMiddleware, controller.updatePersonStatus);
 router.delete('/persons/:id', authMiddleware, controller.deletePerson);
 

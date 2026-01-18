@@ -79,4 +79,23 @@ export class EvidenceRepository extends BaseRepository {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async vote(evidenceId: string, userId: string, isUpvote: boolean) {
+    return this.prisma.evidenceVote.upsert({
+      where: {
+        userId_evidenceId: {
+          userId,
+          evidenceId,
+        },
+      },
+      update: {
+        isUpvote,
+      },
+      create: {
+        evidenceId,
+        userId,
+        isUpvote,
+      },
+    });
+  }
 }

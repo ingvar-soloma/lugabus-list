@@ -84,11 +84,18 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
           {/* Header */}
           <div className="p-8 border-b border-white/5 flex justify-between items-start bg-white/5">
             <div className="flex space-x-8">
-              <img
-                src={person.avatar}
-                alt={person.name}
-                className="w-28 h-28 rounded-3xl object-cover ring-1 ring-white/10 shadow-xl"
-              />
+              {person.avatarSvg ? (
+                <div
+                  className="w-28 h-28 rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl"
+                  dangerouslySetInnerHTML={{ __html: person.avatarSvg }}
+                />
+              ) : (
+                <img
+                  src={person.avatar}
+                  alt={person.name}
+                  className="w-28 h-28 rounded-3xl object-cover ring-1 ring-white/10 shadow-xl"
+                />
+              )}
               <div className="flex flex-col justify-center">
                 <h2 className="text-4xl font-black tracking-tighter mb-1">{person.name}</h2>
                 <p className="text-emerald-500 text-xs font-black uppercase tracking-[0.2em] mb-4">
@@ -207,12 +214,26 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                         key={proof.id}
                         className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 group hover:border-emerald-500/20 transition-all"
                       >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center space-x-2 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
-                            {getIcon()}
-                            <span className="text-[10px] font-black uppercase tracking-widest">
-                              {proof.type || 'LINK'}
-                            </span>
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center space-x-2 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                              {getIcon()}
+                              <span className="text-[10px] font-black uppercase tracking-widest">
+                                {proof.type || 'LINK'}
+                              </span>
+                            </div>
+
+                            {proof.submittedBy && (
+                              <div className="flex items-center space-x-2 bg-white/5 pr-3 rounded-full overflow-hidden border border-white/5 group-hover:border-emerald-500/30 transition-all">
+                                <div
+                                  className="w-6 h-6 border-r border-white/10"
+                                  dangerouslySetInnerHTML={{ __html: proof.submittedBy.avatarSvg }}
+                                />
+                                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-tight group-hover:text-emerald-500 transition-colors">
+                                  {proof.submittedBy.nickname}
+                                </span>
+                              </div>
+                            )}
                           </div>
                           <span className="text-[10px] text-zinc-600 font-bold">{proof.date}</span>
                         </div>

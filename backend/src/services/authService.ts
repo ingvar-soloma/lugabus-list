@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../repositories/baseRepository';
 import { encryptJson, decryptJson } from '../utils/crypto';
+import { generateIdentity } from '../utils/identityGenerator';
 
 const storageService = new StorageService();
 
@@ -44,12 +45,7 @@ export class AuthService {
     }
   }
 
-  async register(data: {
-    username: string;
-    password?: string;
-    firstName?: string;
-    lastName?: string;
-  }): Promise<string> {
+  async register(data: { username: string; password?: string }): Promise<string> {
     const pHash = this.generatePHash(data.username);
     const mHash = this.generateMHash(data.username);
     const encryptionKey = process.env.ENCRYPTION_KEY;
@@ -60,12 +56,11 @@ export class AuthService {
     if (existing) throw new Error('User already exists');
 
     const passwordHash = data.password ? await bcrypt.hash(data.password, 10) : null;
+    const identity = generateIdentity(pHash);
 
     const encryptedData = encryptJson(
       {
         username: data.username,
-        firstName: data.firstName,
-        lastName: data.lastName,
         passwordHash,
       },
       encryptionKey,
@@ -76,6 +71,8 @@ export class AuthService {
         id: pHash,
         mHash,
         encryptedData,
+        displayName: identity.nickname,
+        avatarColor: `hsl(${identity.metadata.hue}, 70%, 50%)`,
         role: 'USER',
       },
     });
@@ -216,6 +213,8 @@ export class AuthService {
       encryptionKey,
     );
 
+    const identity = generateIdentity(pHash);
+
     // Upsert by pHash (id)
     const user = await prisma.user.upsert({
       where: { id: pHash },
@@ -227,8 +226,8 @@ export class AuthService {
         id: pHash,
         encryptedData,
         mHash,
-        // displayName: generateUsername(),
-        // avatarColor: getAvatarColor(pHash),
+        displayName: identity.nickname,
+        avatarColor: `hsl(${identity.metadata.hue}, 70%, 50%)`,
         role: 'USER',
       },
     });

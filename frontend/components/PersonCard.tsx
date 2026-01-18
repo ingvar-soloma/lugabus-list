@@ -32,8 +32,9 @@ const PersonCard: React.FC<PersonCardProps> = ({ person, onClick }) => {
     }
   };
 
-  const scoreColor =
-    person.score > 50 ? 'text-emerald-500' : person.score < 0 ? 'text-red-500' : 'text-amber-500';
+  let scoreColor = 'text-amber-500';
+  if (person.score > 50) scoreColor = 'text-emerald-500';
+  else if (person.score < 0) scoreColor = 'text-red-500';
 
   return (
     <motion.div
@@ -45,12 +46,19 @@ const PersonCard: React.FC<PersonCardProps> = ({ person, onClick }) => {
     >
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center space-x-4">
-          <div className="relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5">
-            <img
-              src={person.avatar}
-              alt={person.name}
-              className="w-14 h-14 object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out"
-            />
+          <div className="relative overflow-hidden rounded-xl bg-zinc-900 border border-white/5 w-14 h-14">
+            {person.avatarSvg ? (
+              <div
+                className="w-full h-full grayscale group-hover:grayscale-0 transition-all duration-700 ease-out"
+                dangerouslySetInnerHTML={{ __html: person.avatarSvg }}
+              />
+            ) : (
+              <img
+                src={person.avatar}
+                alt={person.name}
+                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700 ease-out"
+              />
+            )}
           </div>
           <div>
             <h3 className="font-black text-lg leading-none tracking-tight group-hover:text-emerald-400 transition-colors">

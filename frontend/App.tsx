@@ -184,19 +184,33 @@ const LugaBusContent: React.FC = () => {
           {user ? (
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block text-right leading-none">
-                <p className="text-xs font-black tracking-tight">{user.username}</p>
+                <p className="text-xs font-black tracking-tight text-emerald-500">
+                  {user.nickname || user.username}
+                </p>
                 <p className="text-[9px] text-zinc-500 uppercase tracking-widest mt-1">
-                  {user.role}
+                  {user.role} • {user.username}
                 </p>
               </div>
-              <img
-                src={
-                  user.avatar ||
-                  `https://ui-avatars.com/api/?name=${user.username}&background=random`
-                }
-                alt={`${user.username}'s avatar`}
-                className="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20"
-              />
+              <div
+                className="relative group cursor-help"
+                title={`Анонімний профіль: ${user.nickname}`}
+              >
+                {user.avatarSvg ? (
+                  <div
+                    className="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-emerald-500/20 group-hover:ring-emerald-500/50 transition-all"
+                    dangerouslySetInnerHTML={{ __html: user.avatarSvg }}
+                  />
+                ) : (
+                  <img
+                    src={
+                      user.avatar ||
+                      `https://ui-avatars.com/api/?name=${user.username}&background=random`
+                    }
+                    alt={`${user.username}'s avatar`}
+                    className="w-10 h-10 rounded-xl object-cover ring-2 ring-emerald-500/20"
+                  />
+                )}
+              </div>
               <button
                 onClick={logout}
                 className="p-2 text-zinc-600 hover:text-red-500 transition-colors"

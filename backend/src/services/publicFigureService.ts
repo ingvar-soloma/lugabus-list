@@ -12,7 +12,7 @@ interface CreatePersonDTO {
 export class PublicFigureService extends BaseService {
   private readonly repository = new PublicFigureRepository();
 
-  async getAll(query: GetPublicFiguresQuery) {
+  async getAll(query: GetPublicFiguresQuery, isAdmin = false) {
     const { sortBy = 'fullName', sortOrder = 'asc', filter = '' } = query;
     const where = filter
       ? {
@@ -23,16 +23,19 @@ export class PublicFigureService extends BaseService {
         }
       : {};
 
-    return this.repository.getAll({
-      where,
-      orderBy: {
-        [sortBy]: sortOrder,
+    return this.repository.getAll(
+      {
+        where,
+        orderBy: {
+          [sortBy]: sortOrder,
+        },
       },
-    });
+      isAdmin,
+    );
   }
 
-  async getById(id: string) {
-    return this.repository.getById(id);
+  async getById(id: string, isAdmin = false) {
+    return this.repository.getById(id, isAdmin);
   }
 
   async getRawById(id: string) {
@@ -53,6 +56,24 @@ export class PublicFigureService extends BaseService {
       ...personData,
       status: 'PENDING',
     });
+  }
+
+  async update(
+    id: string,
+    data: {
+      fullName?: string;
+      currentRole?: string;
+      bio?: string;
+      photoUrl?: string;
+      reputation?: number;
+      status?: import('@prisma/client').Status;
+    },
+  ) {
+    return this.repository.update(id, data);
+  }
+
+  async delete(id: string) {
+    return this.repository.delete(id);
   }
 
   async getStats() {

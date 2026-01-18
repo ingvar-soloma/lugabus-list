@@ -20,7 +20,10 @@ export interface Proof {
   dislikes: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EDITS_REQUIRED';
   type?: 'LINK' | 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'VOTE_RECORD';
-  submittedBy?: string; // Анонімний ID користувача
+  submittedBy?: {
+    nickname: string;
+    avatarSvg: string;
+  };
 }
 
 export interface AuditLog {
@@ -56,6 +59,7 @@ export interface Person {
   name: string;
   description: string;
   avatar: string;
+  avatarSvg?: string;
   category: string;
   position: PoliticalPosition;
   score: number;
@@ -70,6 +74,8 @@ export interface User {
   username: string;
   role: UserRole;
   avatar?: string;
+  avatarSvg?: string;
+  nickname?: string;
   email?: string;
   firstName?: string;
   lastName?: string;
@@ -92,6 +98,10 @@ export interface Revision {
     type: string;
     polarity: string;
   }>;
+  authorIdentity?: {
+    nickname: string;
+    avatarSvg: string;
+  };
   createdAt: string;
 }
 

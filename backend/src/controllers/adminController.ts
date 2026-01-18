@@ -170,6 +170,17 @@ export class AdminController {
     }
   };
 
+  generateRandomPerson = async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const adminId = req.user?.sub;
+      if (!adminId) return res.status(401).json({ message: 'Unauthorized' });
+      const person = await this.adminService.generateRandomPerson(adminId);
+      res.json(person);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   // ===== USER MANAGEMENT =====
 
   updateUserRole = async (req: AuthRequest, res: Response, next: NextFunction) => {

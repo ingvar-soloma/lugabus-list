@@ -12,7 +12,9 @@ class ApiService {
   }
 
   async fetchPeople(): Promise<Person[]> {
-    const response = await fetch(`${API_BASE_URL}/figures`);
+    const response = await fetch(`${API_BASE_URL}/figures`, {
+      headers: this.getHeaders(),
+    });
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new ApiError(
@@ -60,12 +62,7 @@ class ApiService {
     return response.json();
   }
 
-  async register(data: {
-    username: string;
-    password?: string;
-    firstName?: string;
-    lastName?: string;
-  }): Promise<User> {
+  async register(data: { username: string; password?: string }): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -261,6 +258,23 @@ class ApiService {
     }
 
     return response.json();
+  }
+
+  async generateRandomFigure(): Promise<Person> {
+    const response = await fetch(`${API_BASE_URL}/admin/persons/generate-random`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to generate person');
+    return response.json();
+  }
+
+  async deleteFigure(id: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/admin/persons/${id}`, {
+      method: 'DELETE',
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete figure');
   }
 }
 

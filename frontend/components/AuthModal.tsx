@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, User as UserIcon, Lock, ArrowRight, Loader } from 'lucide-react';
 import { apiService } from '../services/apiService';
 import TelegramLogin from './TelegramLogin';
@@ -22,8 +22,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    firstName: '',
-    lastName: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -137,37 +135,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
 
-            <AnimatePresence>
-              {mode === 'register' && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="space-y-4 overflow-hidden"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <input
-                      type="text"
-                      placeholder="Ім'я (опціонально)"
-                      value={formData.firstName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setFormData({ ...formData, firstName: e.target.value })
-                      }
-                      className="w-full bg-black/20 border border-white/10 rounded-xl py-4 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Прізвище (опціонально)"
-                      value={formData.lastName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setFormData({ ...formData, lastName: e.target.value })
-                      }
-                      className="w-full bg-black/20 border border-white/10 rounded-xl py-4 px-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-medium"
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {/* Name fields removed as identities are now generated automatically */}
           </div>
 
           {error && (
@@ -214,7 +182,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               onClick={() => {
                 setMode(mode === 'login' ? 'register' : 'login');
                 setError(null);
-                setFormData({ username: '', password: '', firstName: '', lastName: '' });
+                setFormData({ username: '', password: '' });
               }}
               className="text-emerald-500 hover:text-emerald-400 font-bold transition-colors"
             >

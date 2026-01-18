@@ -11,130 +11,149 @@ datasource db {
 
 // Головна сутність (Snapshot актуального стану)
 model Person {
-  id            String     @id @default(uuid())
-  fullName      String
-  currentRole   String?
-  bio           String?    @db.Text
-  photoUrl      String?
-  status        Status     @default(PENDING)
+  id          String  @id @default(uuid())
+  fullName    String
+  currentRole String?
+  bio         String? @db.Text
+  photoUrl    String?
+  status      Status  @default(PENDING)
 
   // Метрики (Scoring)
-  reputation    Float      @default(0.0)
-  influence     Float      @default(0.0)
+  reputation Float @default(0.0)
+  influence  Float @default(0.0)
 
   // Зв'язки
-  revisions     Revision[]
-  tags          Tag[]
-  votes         Vote[]
-  fundraisings  Fundraising[]
+  revisions    Revision[]
+  tags         Tag[]
+  votes        Vote[]
+  fundraisings Fundraising[]
 
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([fullName(ops: raw("gin_trgm_ops"))], type: Gin)
 }
 
 // Ревізія — кожна правка створює новий запис
 model Revision {
-  id            String         @id @default(uuid())
-  personId      String
-  person        Person         @relation(fields: [personId], references: [id])
+  id       String @id @default(uuid())
+  personId String
+  person   Person @relation(fields: [personId], references: [id])
 
-  authorId      String
-  author        User           @relation(fields: [authorId], references: [id])
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
 
   // Дані, що пропонуються змінити
-  proposedData  Json           // Зліпок змін: { fullName: "...", bio: "..." }
-  reason        String?        @db.Text
+  proposedData Json // Зліпок змін: { fullName: "...", bio: "..." }
+  reason       String? @db.Text
 
   // Статус модерації
-  status        Status         @default(PENDING)
-  aiScore       Float?         // Результат перевірки AI (0-100)
+  status  Status @default(PENDING)
+  aiScore Float? // Результат перевірки AI (0-100)
 
   // Докази до цієї конкретної ревізії
-  evidences     Evidence[]
+  evidences Evidence[]
 
-  hashedIp      String?        // HMAC of client's IP (for Anti-Abuse)
+  hashedIp String? // HMAC of client's IP (for Anti-Abuse)
 
-  priorityScore  Int            @default(0)
-  aiVotes        AiVote[]
+  priorityScore Int      @default(0)
+  aiVotes       AiVote[]
 
-  createdAt      DateTime       @default(now())
+  createdAt DateTime @default(now())
 }
 
 model AiVote {
-  id            String   @id @default(uuid())
-  revisionId    String
-  revision      Revision @relation(fields: [revisionId], references: [id])
-  userId        String   // pHash of the user
-  user          User     @relation(fields: [userId], references: [id])
+  id         String   @id @default(uuid())
+  revisionId String
+  revision   Revision @relation(fields: [revisionId], references: [id])
+  userId     String // pHash of the user
+  user       User     @relation(fields: [userId], references: [id])
 
-  createdAt     DateTime @default(now())
+  createdAt DateTime @default(now())
+
   @@unique([userId, revisionId])
 }
 
 // Докази (Медіа, Посилання, Документи)
 model Evidence {
-  id            String       @id @default(uuid())
-  revisionId    String
-  revision      Revision     @relation(fields: [revisionId], references: [id])
+  id         String   @id @default(uuid())
+  revisionId String
+  revision   Revision @relation(fields: [revisionId], references: [id])
 
-  type          EvidenceType @default(LINK)
-  url           String       // S3 шлях або зовнішнє посилання
-  title         String?
+  type  EvidenceType @default(LINK)
+  url   String // S3 шлях або зовнішнє посилання
+  title String?
 
   // Чи цей доказ підтверджує (SUPPORT) чи спростовує (REFUTE) інформацію
-  polarity      Polarity     @default(SUPPORT)
+  polarity Polarity @default(SUPPORT)
 
-  createdAt     DateTime     @default(now())
+  votes EvidenceVote[]
+
+  createdAt DateTime @default(now())
+}
+
+model EvidenceVote {
+  id         String   @id @default(uuid())
+  evidenceId String
+  evidence   Evidence @relation(fields: [evidenceId], references: [id])
+  userId     String // pHash
+  user       User     @relation(fields: [userId], references: [id])
+
+  isUpvote Boolean // true for like, false for dislike
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, evidenceId])
 }
 
 // Система голосування за правки (Scoring)
 model Vote {
-  id            String   @id @default(uuid())
-  personId      String
-  person        Person   @relation(fields: [personId], references: [id])
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  id       String @id @default(uuid())
+  personId String
+  person   Person @relation(fields: [personId], references: [id])
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
 
-  weight        Float    @default(1.0) // Вага голосу залежить від репутації юзера
-  isUpvote      Boolean
+  weight   Float   @default(1.0) // Вага голосу залежить від репутації юзера
+  isUpvote Boolean
 
-  createdAt     DateTime @default(now())
+  createdAt DateTime @default(now())
+
   @@unique([userId, personId]) // Один юзер — один голос за особу
 }
 
 model User {
-  id              String   @id // This is the pHash (HMAC of Telegram ID + Pepper)
+  id String @id // This is the pHash (HMAC of Telegram ID + Pepper)
 
-  role            UserRole @default(USER)
+  role UserRole @default(USER)
 
   // Display name (Reddit-style generated username)
-  displayName     String?
-  
+  displayName String?
+
   // Avatar color (Google Sheets-style)
-  avatarColor     String?
+  avatarColor String?
 
   // Encrypted PII: { username, firstName, lastName, photoUrl, etc. }
-  encryptedData   String?
+  encryptedData String?
 
   // Secondary hash for anomaly detection
-  mHash           String?
+  mHash String?
 
   // For shadow bans
-  isShadowBanned  Boolean  @default(false)
-  violationCount  Int      @default(0)
+  isShadowBanned Boolean @default(false)
+  violationCount Int     @default(0)
 
   // Store hashed IP only if user is flagged for abuse
-  hashedFlaggedIp  String?
+  hashedFlaggedIp String?
 
-  reputation      Float    @default(10.0)
-  createdAt       DateTime @default(now())
+  reputation Float    @default(10.0)
+  createdAt  DateTime @default(now())
 
-  revisions       Revision[]
-  votes           Vote[]
-  aiVotes         AiVote[]
-  auditLogs       AuditLog[]
+  revisions     Revision[]
+  votes         Vote[]
+  aiVotes       AiVote[]
+  evidenceVotes EvidenceVote[]
+  auditLogs     AuditLog[]
 }
 
 model Tag {
@@ -145,7 +164,7 @@ model Tag {
 
 model AuditLog {
   id        String   @id @default(uuid())
-  action    String   // e.g., "APPROVE_REVISION", "BAN_USER"
+  action    String // e.g., "APPROVE_REVISION", "BAN_USER"
   userId    String?
   user      User?    @relation(fields: [userId], references: [id])
   details   Json?
@@ -182,23 +201,23 @@ enum UserRole {
 
 // Збори коштів (Monobank, PayPal, Crypto etc)
 model Fundraising {
-  id              String             @id @default(uuid())
-  personId        String
-  person          Person             @relation(fields: [personId], references: [id])
+  id       String @id @default(uuid())
+  personId String
+  person   Person @relation(fields: [personId], references: [id])
 
   title           String
-  description     String?            @db.Text
+  description     String? @db.Text
   targetAmount    Float?
-  collectedAmount Float?             @default(0.0)
-  currency        String             @default("UAH")
+  collectedAmount Float?  @default(0.0)
+  currency        String  @default("UAH")
 
-  provider        FundraisingProvider @default(OTHER)
-  link            String
+  provider FundraisingProvider @default(OTHER)
+  link     String
 
-  isVerified      Boolean            @default(false)
+  isVerified Boolean @default(false)
 
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum FundraisingProvider {

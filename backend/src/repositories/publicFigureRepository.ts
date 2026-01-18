@@ -1,9 +1,12 @@
-import { Status, Person, Revision, Evidence } from '@prisma/client';
+import { Status, Person, Revision, Evidence, EvidenceVote } from '@prisma/client';
 import { BaseRepository } from './baseRepository';
+import { generateIdentity } from '../utils/identityGenerator';
 
 type PersonWithRevisions = Person & {
   revisions: (Revision & {
-    evidences: Evidence[];
+    evidences: (Evidence & {
+      votes: EvidenceVote[];
+    })[];
   })[];
 };
 
@@ -16,6 +19,10 @@ interface MappedProof {
   likes: number;
   dislikes: number;
   status: string;
+  submittedBy?: {
+    nickname: string;
+    avatarSvg: string;
+  };
 }
 
 interface MappedHistory {
@@ -27,13 +34,18 @@ interface MappedHistory {
 }
 
 export class PublicFigureRepository extends BaseRepository {
-  async getAll(options: { where?: object; orderBy?: object }) {
+  async getAll(options: { where?: object; orderBy?: object }, isAdmin = false) {
     const figures = await this.prisma.person.findMany({
       ...options,
+      where: isAdmin ? options.where : { ...(options.where ?? {}), status: Status.APPROVED },
       include: {
         revisions: {
-          where: { status: Status.APPROVED },
-          include: { evidences: true },
+          where: isAdmin ? {} : { status: Status.APPROVED },
+          include: {
+            evidences: {
+              include: { votes: true },
+            },
+          },
         },
       },
     });
@@ -41,13 +53,17 @@ export class PublicFigureRepository extends BaseRepository {
     return (figures as PersonWithRevisions[]).map((f) => this.mapToPerson(f));
   }
 
-  async getById(id: string) {
+  async getById(id: string, isAdmin = false) {
     const figure = await this.prisma.person.findUnique({
       where: { id },
       include: {
         revisions: {
-          where: { status: Status.APPROVED },
-          include: { evidences: true },
+          where: isAdmin ? {} : { status: Status.APPROVED },
+          include: {
+            evidences: {
+              include: { votes: true },
+            },
+          },
         },
       },
     });
@@ -71,16 +87,23 @@ export class PublicFigureRepository extends BaseRepository {
     // Collect all evidences from all approved revisions
     const allEvidences: MappedProof[] =
       figure.revisions?.flatMap((rev) =>
-        (rev.evidences || []).map((ev) => ({
-          id: ev.id,
-          text: ev.title || rev.reason || 'Доказ без опису',
-          sourceUrl: ev.url,
-          type: ev.type,
-          date: rev.createdAt.toISOString().split('T')[0],
-          likes: 0,
-          dislikes: 0,
-          status: 'APPROVED',
-        })),
+        (rev.evidences || []).map((ev) => {
+          const identity = generateIdentity(rev.authorId);
+          return {
+            id: ev.id,
+            text: ev.title || rev.reason || 'Доказ без опису',
+            sourceUrl: ev.url,
+            type: ev.type,
+            date: rev.createdAt.toISOString().split('T')[0],
+            likes: ev.votes.filter((v) => v.isUpvote).length,
+            dislikes: ev.votes.filter((v) => !v.isUpvote).length,
+            status: 'APPROVED',
+            submittedBy: {
+              nickname: identity.nickname,
+              avatarSvg: identity.svg,
+            },
+          };
+        }),
       ) || [];
 
     // Map revisions to history timeline
@@ -93,18 +116,21 @@ export class PublicFigureRepository extends BaseRepository {
         position: position, // Use the person's position for the event
       })) || [];
 
+    const identity = generateIdentity(figure.id);
+
     return {
       id: figure.id,
       name: figure.fullName,
       description: figure.bio,
       avatar: figure.photoUrl || `https://picsum.photos/seed/${figure.id}/200/200`,
+      avatarSvg: identity.svg,
       category: figure.currentRole,
       position,
       score: figure.reputation,
       proofsCount: allEvidences.length,
       lastUpdated: figure.updatedAt.toISOString().split('T')[0],
       proofs: allEvidences,
-      history: history.sort((a, b) => b.date.localeCompare(a.date)),
+      history: [...history].sort((a, b) => b.date.localeCompare(a.date)),
     };
   }
 
@@ -130,6 +156,52 @@ export class PublicFigureRepository extends BaseRepository {
         reputation: data.reputation || 0,
         status: data.status || Status.PENDING,
       },
+    });
+  }
+
+  async update(
+    id: string,
+    data: {
+      fullName?: string;
+      currentRole?: string;
+      bio?: string;
+      photoUrl?: string;
+      reputation?: number;
+      status?: Status;
+    },
+  ) {
+    return this.prisma.person.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async delete(id: string) {
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Delete evidence votes
+      await tx.evidenceVote.deleteMany({
+        where: { evidence: { revision: { personId: id } } },
+      });
+      // 2. Delete evidences
+      await tx.evidence.deleteMany({
+        where: { revision: { personId: id } },
+      });
+      // 3. Delete AI votes
+      await tx.aiVote.deleteMany({
+        where: { revision: { personId: id } },
+      });
+      // 4. Delete revisions
+      await tx.revision.deleteMany({
+        where: { personId: id },
+      });
+      // 5. Delete person votes
+      await tx.vote.deleteMany({
+        where: { personId: id },
+      });
+      // 6. Delete person
+      return tx.person.delete({
+        where: { id },
+      });
     });
   }
 
