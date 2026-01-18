@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Person, PoliticalPosition } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Person, PoliticalPosition, ThemeClasses } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -7,7 +7,6 @@ import {
   ThumbsUp,
   ThumbsDown,
   Clock,
-  ShieldCheck,
   ShieldAlert,
   ShieldQuestion,
   Brain,
@@ -24,9 +23,11 @@ import AddEvidenceModal from './AddEvidenceModal';
 interface PersonModalProps {
   person: Person | null;
   onClose: () => void;
+  isDarkMode: boolean;
+  themeClasses: ThemeClasses;
 }
 
-const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
+const PersonModal: React.FC<PersonModalProps> = ({ person, onClose, isDarkMode, themeClasses }) => {
   const [isAddEvidenceOpen, setIsAddEvidenceOpen] = useState(false);
   const { showToast, refreshData } = useAppContext();
 
@@ -72,65 +73,74 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/90 backdrop-blur-sm"
+          className="absolute inset-0 bg-black/80 backdrop-blur-sm"
         />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-4xl max-h-[85vh] glass rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl shadow-emerald-500/5 border border-white/10"
+          className={`relative w-full max-w-4xl max-h-[85vh] border rounded-sm overflow-hidden flex flex-col shadow-2xl ${isDarkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-slate-200'} ${themeClasses.textMain}`}
         >
           {/* Header */}
-          <div className="p-8 border-b border-white/5 flex justify-between items-start bg-white/5">
+          <div
+            className={`p-8 border-b flex justify-between items-start ${isDarkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-slate-50 border-slate-100'}`}
+          >
             <div className="flex space-x-8">
               {person.avatarSvg ? (
                 <div
-                  className="w-28 h-28 rounded-3xl overflow-hidden ring-1 ring-white/10 shadow-xl"
+                  className="w-28 h-28 rounded-none overflow-hidden border border-zinc-800 shadow-xl"
                   dangerouslySetInnerHTML={{ __html: person.avatarSvg }}
                 />
               ) : (
                 <img
                   src={person.avatar}
                   alt={person.name}
-                  className="w-28 h-28 rounded-3xl object-cover ring-1 ring-white/10 shadow-xl"
+                  className="w-28 h-28 rounded-none object-cover border border-zinc-800 shadow-xl"
                 />
               )}
               <div className="flex flex-col justify-center">
-                <h2 className="text-4xl font-black tracking-tighter mb-1">{person.name}</h2>
-                <p className="text-emerald-500 text-xs font-black uppercase tracking-[0.2em] mb-4">
+                <h2 className="text-4xl font-black tracking-tighter mb-1 font-montserrat uppercase">
+                  {person.name}
+                </h2>
+                <p
+                  className={`text-xs font-black uppercase tracking-[0.2em] mb-4 ${themeClasses.accentText}`}
+                >
                   {person.category}
                 </p>
                 <div className="flex space-x-2">
-                  {person.position === PoliticalPosition.SUPPORT && (
-                    <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-emerald-500/20 uppercase flex items-center">
-                      <ShieldCheck className="mr-1" size={12} /> Патріот
+                  {person.position === PoliticalPosition.BETRAYAL ? (
+                    <span className="bg-red-900/20 text-red-500 px-3 py-1 border border-red-900/50 text-[10px] font-black tracking-widest uppercase flex items-center">
+                      <ShieldAlert className="mr-1" size={12} /> Колаборант
                     </span>
-                  )}
-                  {person.position === PoliticalPosition.BETRAYAL && (
-                    <span className="bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-red-500/20 uppercase flex items-center">
-                      <ShieldAlert className="mr-1" size={12} /> Зашквар
-                    </span>
-                  )}
-                  {person.position === PoliticalPosition.NEUTRAL && (
-                    <span className="bg-amber-500/10 text-amber-400 px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-amber-500/20 uppercase flex items-center">
-                      <ShieldQuestion className="mr-1" size={12} /> Морозиться
+                  ) : (
+                    <span className="bg-zinc-800 text-zinc-400 px-3 py-1 border border-zinc-700 text-[10px] font-black tracking-widest uppercase flex items-center">
+                      <ShieldQuestion className="mr-1" size={12} /> Під перевіркою
                     </span>
                   )}
                 </div>
+                <button
+                  onClick={() => (globalThis.location.href = '#')}
+                  className="text-[9px] text-zinc-600 mt-2 hover:text-zinc-400 transition-colors text-left flex items-center group/ai"
+                  title="Дані згенеровані або перевірені AI на основі відкритих джерел"
+                >
+                  <Brain size={10} className="mr-1 opacity-50 group-hover/ai:text-red-500" />
+                  Згенеровано AI. Оціночне судження.{' '}
+                  <span className="underline ml-1">Детальніше</span>
+                </button>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={handlePriorityVote}
-                className="bg-purple-500/10 text-purple-400 px-4 py-2.5 rounded-2xl text-[10px] font-black tracking-widest border border-purple-500/20 uppercase flex items-center hover:bg-purple-500 hover:text-white transition-all shadow-lg hover:shadow-purple-500/20"
+                className="bg-red-900/10 text-red-500 px-4 py-2.5 border border-red-900/20 text-[10px] font-black tracking-widest uppercase flex items-center hover:bg-red-700 hover:text-white transition-all shadow-lg"
                 title="Підняти в рейтингу для глибокої перевірки"
               >
                 <Brain className="mr-2" size={14} /> Глибока перевірка
               </button>
               <button
                 onClick={onClose}
-                className="p-2.5 bg-zinc-900/50 hover:bg-zinc-800 rounded-full transition-colors text-zinc-400"
+                className={`p-2.5 rounded-none border transition-colors ${isDarkMode ? 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:bg-zinc-700' : 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200'}`}
               >
                 <X size={20} />
               </button>
@@ -140,11 +150,19 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
           <div className="flex-1 overflow-y-auto p-8 space-y-10">
             {/* Bio Section */}
             <section>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-4 flex items-center">
-                <Clock className="mr-2 text-emerald-500" size={14} /> Аналіз позиції
+              <h4
+                className={`text-[10px] font-black uppercase tracking-[0.3em] mb-4 flex items-center ${themeClasses.textMuted}`}
+              >
+                <Clock className={`mr-2 ${themeClasses.accentText}`} size={14} /> Аналіз позиції
               </h4>
-              <p className="text-zinc-300 leading-relaxed text-lg font-medium italic opacity-80 border-l-4 border-emerald-500/30 pl-6">
+              <p
+                className={`leading-relaxed text-lg font-medium italic opacity-80 border-l-4 pl-6 ${isDarkMode ? 'text-zinc-300 border-red-900/50' : 'text-slate-700 border-red-200'}`}
+              >
                 "{person.description}"
+              </p>
+              <p className="text-[10px] text-zinc-600 mt-3 ml-6 font-bold uppercase tracking-widest italic flex items-center">
+                <Brain size={10} className={`mr-2 ${themeClasses.accentText} opacity-50`} />
+                AI Verdict: Оціночне судження на основі аналізу доказів
               </p>
             </section>
 
@@ -159,26 +177,28 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                     const getPositionColor = (pos: PoliticalPosition) => {
                       switch (pos) {
                         case PoliticalPosition.SUPPORT:
-                          return 'bg-emerald-500';
+                          return 'bg-zinc-500';
                         case PoliticalPosition.BETRAYAL:
-                          return 'bg-red-500';
+                          return 'bg-red-600';
                         default:
-                          return 'bg-amber-500';
+                          return 'bg-zinc-400';
                       }
                     };
 
                     return (
                       <div key={event.id} className="relative pl-8">
                         <div
-                          className={`absolute left-[-5px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ring-zinc-950 ${getPositionColor(event.position)}`}
+                          className={`absolute left-[-5px] top-1.5 w-2.5 h-2.5 rounded-full ring-4 ${isDarkMode ? 'ring-zinc-950' : 'ring-white'} ${getPositionColor(event.position)}`}
                         />
                         <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                           {event.date}
                         </span>
-                        <h5 className="font-black text-zinc-100 mt-0.5 tracking-tight">
+                        <h5
+                          className={`font-black mt-0.5 tracking-tight ${isDarkMode ? 'text-zinc-100' : 'text-slate-900'}`}
+                        >
                           {event.title}
                         </h5>
-                        <p className="text-sm text-zinc-400 mt-1 leading-snug">
+                        <p className={`text-sm mt-1 leading-snug ${themeClasses.textMuted}`}>
                           {event.description}
                         </p>
                       </div>
@@ -212,11 +232,13 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                     return (
                       <div
                         key={proof.id}
-                        className="bg-zinc-900/40 p-5 rounded-2xl border border-white/5 group hover:border-emerald-500/20 transition-all"
+                        className={`p-5 rounded-none border group transition-all ${isDarkMode ? 'bg-zinc-900/40 border-zinc-800 hover:border-red-900/50' : 'bg-slate-50 border-slate-100 hover:border-red-200'}`}
                       >
                         <div className="flex justify-between items-center mb-4">
                           <div className="flex items-center space-x-3">
-                            <div className="flex items-center space-x-2 text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-lg">
+                            <div
+                              className={`flex items-center space-x-2 px-2 py-1 border ${isDarkMode ? 'text-red-500 bg-red-900/10 border-red-900/20' : 'text-red-700 bg-red-50 border-red-100'}`}
+                            >
                               {getIcon()}
                               <span className="text-[10px] font-black uppercase tracking-widest">
                                 {proof.type || 'LINK'}
@@ -224,12 +246,16 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                             </div>
 
                             {proof.submittedBy && (
-                              <div className="flex items-center space-x-2 bg-white/5 pr-3 rounded-full overflow-hidden border border-white/5 group-hover:border-emerald-500/30 transition-all">
+                              <div
+                                className={`flex items-center space-x-2 pr-3 border overflow-hidden transition-all ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-slate-200'}`}
+                              >
                                 <div
-                                  className="w-6 h-6 border-r border-white/10"
+                                  className="w-6 h-6 border-r border-zinc-700"
                                   dangerouslySetInnerHTML={{ __html: proof.submittedBy.avatarSvg }}
                                 />
-                                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-tight group-hover:text-emerald-500 transition-colors">
+                                <span
+                                  className={`text-[9px] font-bold uppercase tracking-tight ${themeClasses.textMuted}`}
+                                >
                                   {proof.submittedBy.nickname}
                                 </span>
                               </div>
@@ -237,29 +263,43 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                           </div>
                           <span className="text-[10px] text-zinc-600 font-bold">{proof.date}</span>
                         </div>
-                        <p className="text-sm text-zinc-200 mb-4 leading-relaxed font-medium">
+                        <p
+                          className={`text-sm mb-4 leading-relaxed font-medium ${isDarkMode ? 'text-zinc-200' : 'text-slate-800'}`}
+                        >
                           {proof.text}
                         </p>
                         <div className="flex items-center justify-between">
-                          <a
-                            href={proof.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] text-emerald-500 flex items-center hover:underline font-black uppercase tracking-widest"
-                          >
-                            <ExternalLink size={12} className="mr-1.5" /> Джерело
-                          </a>
+                          <div className="flex items-center space-x-4">
+                            <a
+                              href={proof.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`text-[10px] flex items-center hover:underline font-black uppercase tracking-widest ${themeClasses.accentText}`}
+                              title={`Перейти до першоджерела: ${proof.sourceUrl}`}
+                            >
+                              <ExternalLink size={12} className="mr-1.5" /> Джерело
+                            </a>
+                            <a
+                              href={`https://web.archive.org/web/*/${proof.sourceUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-zinc-500 flex items-center hover:underline font-black uppercase tracking-widest"
+                              title="Переглянути архівну копію у Wayback Machine"
+                            >
+                              <Clock size={12} className="mr-1.5" /> Архів
+                            </a>
+                          </div>
                           <div className="flex items-center space-x-3">
                             <button
                               onClick={() => handleVote(proof.id, 'like')}
-                              className="flex items-center space-x-1.5 text-xs text-emerald-400/60 hover:text-emerald-400 transition-colors"
+                              className={`flex items-center space-x-1.5 text-xs transition-colors hover:text-red-500 ${isDarkMode ? 'text-zinc-600' : 'text-slate-400'}`}
                             >
                               <ThumbsUp size={14} />{' '}
                               <span className="font-bold">{proof.likes}</span>
                             </button>
                             <button
                               onClick={() => handleVote(proof.id, 'dislike')}
-                              className="flex items-center space-x-1.5 text-xs text-red-400/60 hover:text-red-400 transition-colors"
+                              className={`flex items-center space-x-1.5 text-xs transition-colors hover:text-red-500 ${isDarkMode ? 'text-zinc-600' : 'text-slate-400'}`}
                             >
                               <ThumbsDown size={14} />{' '}
                               <span className="font-bold">{proof.dislikes}</span>
@@ -271,7 +311,7 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                   })}
                   <button
                     onClick={() => setIsAddEvidenceOpen(true)}
-                    className="w-full py-5 border border-dashed border-zinc-800 rounded-2xl text-zinc-600 hover:text-emerald-500 hover:border-emerald-500/50 transition-all font-black text-xs tracking-widest uppercase"
+                    className={`w-full py-5 border border-dashed rounded-none transition-all font-black text-xs tracking-widest uppercase ${isDarkMode ? 'border-zinc-800 text-zinc-600 hover:text-red-500 hover:border-red-900/50' : 'border-slate-200 text-slate-400 hover:text-red-700 hover:border-red-200'}`}
                   >
                     Запропонувати доказ
                   </button>

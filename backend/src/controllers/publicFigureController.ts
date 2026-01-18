@@ -4,6 +4,7 @@ import { PublicFigureService } from '../services/publicFigureService';
 import { GetPublicFiguresQuery } from '../models/types/publicFigureTypes';
 import { OgImageService } from '../services/ogImageService';
 import { UserPayload } from '../middlewares/authMiddleware';
+import { generateIdentity } from '../utils/identityGenerator';
 
 export class PublicFigureController {
   private readonly service = new PublicFigureService();
@@ -13,20 +14,28 @@ export class PublicFigureController {
       const authHeader = req.headers.authorization;
       const token = authHeader?.split(' ')[1];
       let isAdmin = false;
+      let isAuthenticated = false;
 
       if (token) {
         try {
           const secret = process.env.JWT_SECRET;
           if (secret) {
-            const decoded = jwt.verify(token, secret) as UserPayload;
-            isAdmin = decoded.role === 'ADMIN';
+            jwt.verify(token, secret);
+            isAuthenticated = true;
+            // Also check for admin
+            const decoded = jwt.decode(token) as UserPayload;
+            isAdmin = decoded?.role === 'ADMIN';
           }
         } catch {
-          // Ignore
+          // Token invalid, stay unauthenticated
         }
       }
 
-      const figures = await this.service.getAll(req.query as GetPublicFiguresQuery, isAdmin);
+      const figures = await this.service.getAll(
+        req.query as GetPublicFiguresQuery,
+        isAdmin,
+        isAuthenticated,
+      );
       res.json(figures);
     } catch (error) {
       next(error);
@@ -38,20 +47,24 @@ export class PublicFigureController {
       const authHeader = req.headers.authorization;
       const token = authHeader?.split(' ')[1];
       let isAdmin = false;
+      let isAuthenticated = false;
 
       if (token) {
         try {
           const secret = process.env.JWT_SECRET;
           if (secret) {
-            const decoded = jwt.verify(token, secret) as UserPayload;
-            isAdmin = decoded.role === 'ADMIN';
+            jwt.verify(token, secret);
+            isAuthenticated = true;
+            // Also check for admin
+            const decoded = jwt.decode(token) as UserPayload;
+            isAdmin = decoded?.role === 'ADMIN';
           }
         } catch {
-          // Ignore
+          // Token invalid
         }
       }
 
-      const figure = await this.service.getById(req.params.id, isAdmin);
+      const figure = await this.service.getById(req.params.id, isAdmin, isAuthenticated);
       if (figure) {
         res.json(figure);
       } else {
@@ -106,8 +119,10 @@ export class PublicFigureController {
         return;
       }
 
+      // OG images are public, so we use the deterministic nickname to avoid leaking real names in shares
+      const identity = generateIdentity(person.id);
       const ogImageService = new OgImageService();
-      const buffer = await ogImageService.generatePersonCard(person);
+      const buffer = await ogImageService.generatePersonCard(person, identity.nickname);
 
       res.set('Content-Type', 'image/png');
       res.set('Cache-Control', 'public, max-age=86400'); // Cache for 1 day

@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+  useMemo,
+} from 'react';
 import { User, Person, Stats } from '../types';
 import { apiService } from '../services/apiService';
 import { ToastContainer, ToastType } from '../components/Toast';
@@ -24,16 +32,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [loading, setLoading] = useState(true);
   const [toasts, setToasts] = useState<{ id: string; message: string; type: ToastType }[]>([]);
 
-  const showToast = (message: string, type: ToastType = 'success') => {
+  const showToast = useCallback((message: string, type: ToastType = 'success') => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
-  };
+  }, []);
 
   const removeToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     setLoading(true);
     try {
       const [peopleData, statsData] = await Promise.all([
@@ -44,30 +52,36 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setStats(statsData);
     } catch (error) {
       console.error('Failed to fetch data', error);
+      showToast('Помилка оновлення даних', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const login = async (telegramData: Record<string, unknown>) => {
-    try {
-      const userData = await apiService.handleTelegramLogin(telegramData);
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      showToast('Вхід виконано успішно');
-    } catch (error) {
-      console.error('Login failed', error);
-      showToast('Помилка при вході', 'error');
-      throw error;
-    }
-  };
+  const login = useCallback(
+    async (telegramData: Record<string, unknown>) => {
+      try {
+        const userData = await apiService.handleTelegramLogin(telegramData);
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        showToast('Вхід виконано успішно');
+        await refreshData();
+      } catch (error) {
+        console.error('Login failed', error);
+        showToast('Помилка при вході', 'error');
+        throw error;
+      }
+    },
+    [refreshData],
+  );
 
-  const logout = () => {
+  const logout = useCallback(async () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
     showToast('Ви вийшли з аккаунту', 'info');
-  };
+    await refreshData();
+  }, [refreshData]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -89,14 +103,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           setUser(null);
         }
       }
-      refreshData();
+      await refreshData();
     };
     initAuth();
-  }, []);
+  }, [refreshData]);
 
-  const contextValue = React.useMemo(
+  const contextValue = useMemo(
     () => ({ user, setUser, people, stats, loading, login, logout, refreshData, showToast }),
-    [user, people, stats, loading, showToast],
+    [user, people, stats, loading, login, logout, refreshData, showToast],
   );
 
   return (

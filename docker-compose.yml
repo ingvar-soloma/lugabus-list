@@ -12,11 +12,12 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    ports:
-      - "8080:8080"
-      - "5555:5555"
+    # No ports here, they will be in docker-compose.override.yml for dev
     environment:
-      DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: db
       JWT_SECRET: ${JWT_SECRET}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       CORS_ORIGIN: ${CORS_ORIGIN}

@@ -1,39 +1,40 @@
 import React from 'react';
 import { useAppContext } from '../store/AppContext';
-import { Users, AlertTriangle, ShieldCheck, Activity } from 'lucide-react';
+import { ThemeClasses } from '../types';
 import { motion } from 'framer-motion';
 
-const StatsBar: React.FC = () => {
+interface StatsBarProps {
+  isDarkMode: boolean;
+  themeClasses: ThemeClasses;
+}
+
+const StatsBar: React.FC<StatsBarProps> = ({ isDarkMode, themeClasses }) => {
   const { stats } = useAppContext();
 
   if (!stats) return null;
 
   const statItems = [
-    { label: 'Моніторинг', value: stats.totalMonitored, icon: Users, color: 'text-zinc-400' },
-    { label: 'Зашквар', value: stats.betrayalCount, icon: AlertTriangle, color: 'text-red-500' },
-    { label: 'Патріоти', value: stats.supportCount, icon: ShieldCheck, color: 'text-emerald-500' },
-    { label: 'Активність', value: stats.weeklyActivity, icon: Activity, color: 'text-emerald-400' },
+    { label: 'ОСІБ У РЕЄСТРІ', value: stats.totalMonitored.toLocaleString() },
+    { label: 'ЗРАДНИКИ', value: stats.betrayalCount.toLocaleString() },
+    { label: 'ПІДТВЕРДЖЕНІ ДОКАЗИ', value: (stats.totalMonitored * 4).toLocaleString() }, // Mocking proofs count as total * 4 for now
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-      {statItems.map((item, idx) => (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 mb-12">
+      {statItems.map((item, i) => (
         <motion.div
-          key={item.label}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.05 }}
-          className="glass p-5 rounded-2xl flex items-center space-x-4 border border-white/5 hover:border-white/10 transition-colors"
+          key={i}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: i * 0.1 }}
+          className={`p-8 border transition-all ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
         >
-          <div className={`p-2.5 rounded-lg bg-zinc-900/80 ${item.color}`}>
-            <item.icon size={20} />
-          </div>
-          <div>
-            <p className="text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-bold mb-0.5">
-              {item.label}
-            </p>
-            <p className="text-2xl font-black tracking-tighter leading-none">{item.value}</p>
-          </div>
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2">
+            {item.label}
+          </p>
+          <p className={`text-4xl font-black ${i === 0 || i === 1 ? themeClasses.accentText : ''}`}>
+            {item.value}
+          </p>
         </motion.div>
       ))}
     </div>

@@ -12,7 +12,7 @@ interface CreatePersonDTO {
 export class PublicFigureService extends BaseService {
   private readonly repository = new PublicFigureRepository();
 
-  async getAll(query: GetPublicFiguresQuery, isAdmin = false) {
+  async getAll(query: GetPublicFiguresQuery, isAdmin = false, isAuthenticated = false) {
     const { sortBy = 'fullName', sortOrder = 'asc', filter = '' } = query;
     const where = filter
       ? {
@@ -31,11 +31,12 @@ export class PublicFigureService extends BaseService {
         },
       },
       isAdmin,
+      isAuthenticated,
     );
   }
 
-  async getById(id: string, isAdmin = false) {
-    return this.repository.getById(id, isAdmin);
+  async getById(id: string, isAdmin = false, isAuthenticated = false) {
+    return this.repository.getById(id, isAdmin, isAuthenticated);
   }
 
   async getRawById(id: string) {

@@ -9,6 +9,7 @@ import routes from './routes';
 import logger from './config/logger';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger';
+import { ipStripper } from './middlewares/ipStripper';
 
 const app = express();
 const port = process.env.PORT || 8080;
@@ -57,6 +58,9 @@ const limiter = rateLimit({
 
 // Apply the rate limiting middleware to all requests
 app.use(limiter);
+
+// Security & GDPR: Strip IP after rate limiting to prevent tracking in DB/Logs
+app.use(ipStripper);
 
 const allowedOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',')

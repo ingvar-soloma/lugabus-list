@@ -6,8 +6,9 @@ export class OgImageService {
   private readonly width = 1200;
   private readonly height = 630;
 
-  async generatePersonCard(person: Person): Promise<Buffer> {
+  async generatePersonCard(person: Person, displayName?: string): Promise<Buffer> {
     try {
+      const name = displayName || person.fullName;
       // 1. Create a base canvas (dark gradient-ish)
       const canvas = sharp({
         create: {
@@ -37,7 +38,7 @@ export class OgImageService {
           <text x="60" y="100" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#059669" letter-spacing="2">LUGABUS.UA</text>
           
           <!-- Person Name -->
-          <text x="60" y="240" font-family="Arial, sans-serif" font-size="80" font-weight="black" fill="white">${this.escapeXml(person.fullName)}</text>
+          <text x="60" y="240" font-family="Arial, sans-serif" font-size="80" font-weight="black" fill="white">${this.escapeXml(name)}</text>
           
           <!-- Role -->
           <text x="60" y="310" font-family="Arial, sans-serif" font-size="32" fill="#9ca3af">${this.escapeXml(person.currentRole || 'Громадський діяч')}</text>

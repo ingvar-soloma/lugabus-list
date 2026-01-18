@@ -17,15 +17,15 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
   }, [onClose]);
 
   const icons = {
-    success: <CheckCircle className="text-emerald-400" size={20} />,
-    error: <AlertCircle className="text-red-400" size={20} />,
-    info: <Info className="text-blue-400" size={20} />,
+    success: <CheckCircle className="text-zinc-100" size={20} />,
+    error: <AlertCircle className="text-red-500" size={20} />,
+    info: <Info className="text-zinc-400" size={20} />,
   };
 
   const bgColors = {
-    success: 'bg-emerald-500/10 border-emerald-500/20',
+    success: 'bg-zinc-800 border-zinc-700',
     error: 'bg-red-500/10 border-red-500/20',
-    info: 'bg-blue-500/10 border-blue-500/20',
+    info: 'bg-zinc-900 border-zinc-800',
   };
 
   return (
@@ -33,7 +33,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-      className={`flex items-center gap-3 px-4 py-3 rounded-2xl border backdrop-blur-xl shadow-2xl ${bgColors[type]} min-w-[300px] max-w-md pointer-events-auto`}
+      className={`flex items-center gap-3 px-4 py-3 rounded-none border backdrop-blur-xl shadow-2xl ${bgColors[type]} min-w-[300px] max-w-md pointer-events-auto`}
     >
       <div className="flex-shrink-0">{icons[type]}</div>
       <p className="flex-1 text-sm font-medium text-zinc-200">{message}</p>

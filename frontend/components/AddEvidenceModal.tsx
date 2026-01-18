@@ -157,14 +157,14 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-2xl max-h-[85vh] glass rounded-3xl overflow-hidden flex flex-col shadow-2xl shadow-emerald-500/10 border border-white/10"
+          className="relative w-full max-w-2xl max-h-[85vh] bg-zinc-950 overflow-hidden flex flex-col shadow-2xl border border-white/10"
         >
           {/* Header */}
           <div className="p-6 border-b border-white/5 flex justify-between items-center bg-white/5">
             <div>
               <h2 className="text-2xl font-black tracking-tight">Запропонувати доказ</h2>
               <p className="text-sm text-zinc-500 mt-1">
-                для <span className="text-emerald-500 font-bold">{personName}</span>
+                для <span className="text-red-500 font-bold">{personName}</span>
               </p>
             </div>
             <button
@@ -183,10 +183,10 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center justify-center py-12 text-center"
               >
-                <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4">
-                  <Send className="text-emerald-500" size={32} />
+                <div className="w-20 h-20 rounded-none bg-red-500/20 flex items-center justify-center mb-4">
+                  <Send className="text-red-500" size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-emerald-400 mb-2">Доказ надіслано!</h3>
+                <h3 className="text-xl font-bold text-red-500 mb-2">Доказ надіслано!</h3>
                 <p className="text-zinc-500 text-sm">
                   Ваша пропозиція буде розглянута модераторами
                 </p>
@@ -206,7 +206,7 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Опишіть контекст доказу..."
-                    className="w-full bg-zinc-900/50 border border-white/10 rounded-xl p-4 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50 resize-none h-24"
+                    className="w-full bg-zinc-900/50 border border-white/10 rounded-none p-4 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50 resize-none h-24"
                   />
                   {fieldErrors.reason && (
                     <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
@@ -235,7 +235,7 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
                               value={evidence.url}
                               onChange={(e) => handleEvidenceChange(index, 'url', e.target.value)}
                               placeholder="https://..."
-                              className="w-full bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-3 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                              className="w-full bg-zinc-800/50 border border-white/10 rounded-none px-4 py-3 text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50"
                             />
                             {fieldErrors[`evidences.${index}.url`] && (
                               <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
@@ -262,7 +262,7 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
                             value={evidence.title}
                             onChange={(e) => handleEvidenceChange(index, 'title', e.target.value)}
                             placeholder="Назва (необов'язково)"
-                            className="w-full bg-zinc-800/50 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                            className="w-full bg-zinc-800/50 border border-white/10 rounded-none px-4 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-red-500/50"
                           />
                           {fieldErrors[`evidences.${index}.title`] && (
                             <p className="text-red-400 text-[10px] mt-2 ml-1 flex items-center gap-1 font-bold uppercase tracking-wider">
@@ -313,7 +313,7 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
                   {/* Add More Button */}
                   <button
                     onClick={handleAddEvidence}
-                    className="mt-4 w-full py-3 border border-dashed border-zinc-700 rounded-xl text-zinc-500 hover:text-emerald-500 hover:border-emerald-500/50 transition-all font-bold text-xs tracking-widest uppercase flex items-center justify-center gap-2"
+                    className="mt-4 w-full py-3 border border-dashed border-zinc-700 rounded-none text-zinc-500 hover:text-red-500 hover:border-red-500/50 transition-all font-black text-xs tracking-widest uppercase flex items-center justify-center gap-2"
                   >
                     <Plus size={16} />
                     Додати ще доказ
@@ -337,7 +337,7 @@ const AddEvidenceModal: React.FC<AddEvidenceModalProps> = ({
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className="w-full py-4 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 rounded-xl text-white font-black text-sm tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-4 bg-red-700 hover:bg-red-600 rounded-none text-white font-black text-sm tracking-widest uppercase transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (
                   <>

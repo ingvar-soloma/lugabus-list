@@ -112,3 +112,17 @@ export interface Stats {
   pendingProofs: number;
   weeklyActivity: number;
 }
+
+export interface ThemeClasses {
+  bg: string;
+  header: string;
+  card: string;
+  textMain: string;
+  textMuted: string;
+  input: string;
+  footer: string;
+  tag: string;
+  navLink: string;
+  accentText: string;
+  accentBg: string;
+}
