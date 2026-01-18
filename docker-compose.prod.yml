@@ -1,23 +1,40 @@
 services:
-  frontend:
-    # In production, we use the build defined in docker-compose.yml (Nginx)
-    ports:
-      - '80:80'
+  caddy:
+    image: caddy:2-alpine
     restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      DOMAIN: ${DOMAIN:-ingvarsoloma.dev}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@ingvarsoloma.dev}
+    depends_on:
+      - frontend
+      - backend
+
+  frontend:
+    restart: always
+    # No ports exposed to host, Caddy will proxy to it
 
   backend:
-    # In production, we rely on the built Docker image (from the Dockerfile).
-    # No volume mounts for code, ensuring immutability.
     restart: always
     depends_on:
       db:
         condition: service_healthy
+    # No ports exposed to host, Caddy will proxy to it
 
   db:
     restart: always
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    # No ports exposed to host for security
+
+volumes:
+  caddy_data:
+  caddy_config:
