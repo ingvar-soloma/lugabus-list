@@ -14,7 +14,7 @@ interface AuthModalProps {
 type AuthMode = 'login' | 'register';
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { setUser: setAppUser, login: appLogin } = useAppContext();
+  const { setUser: setAppUser, login: appLogin, refreshData } = useAppContext();
   const [mode, setMode] = useState<AuthMode>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +37,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         user = await apiService.login({ username: formData.username, password: formData.password });
       }
       setAppUser(user);
+      await refreshData();
       onClose();
     } catch (err) {
       setError((err as Error).message || 'Something went wrong');

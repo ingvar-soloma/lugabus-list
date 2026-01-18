@@ -11,8 +11,8 @@ const StatsBar: React.FC = () => {
   const statItems = [
     { label: 'Моніторинг', value: stats.totalMonitored, icon: Users, color: 'text-zinc-400' },
     { label: 'Зашквар', value: stats.betrayalCount, icon: AlertTriangle, color: 'text-red-500' },
-    { label: 'Патріоти', value: stats.supportCount, icon: ShieldCheck, color: 'text-emerald-500' },
-    { label: 'Активність', value: stats.weeklyActivity, icon: Activity, color: 'text-emerald-400' },
+    { label: 'Патріоти', value: stats.supportCount, icon: ShieldCheck, color: 'text-primary' },
+    { label: 'Активність', value: stats.weeklyActivity, icon: Activity, color: 'text-primary-light' },
   ];
 
   return (

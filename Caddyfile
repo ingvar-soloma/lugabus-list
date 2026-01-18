@@ -2,7 +2,7 @@
     email {$ADMIN_EMAIL}
 }
 
-{$DOMAIN} {
+{$DOMAIN}, lugabus.org, ingvar-soloma.lugabus.org {
     # Backend API - handle /api first
     handle /api/* {
         reverse_proxy backend:8080

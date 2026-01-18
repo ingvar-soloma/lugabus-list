@@ -79,7 +79,7 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-4xl max-h-[85vh] glass rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl shadow-emerald-500/5 border border-white/10"
+          className="relative w-full max-w-4xl max-h-[85vh] glass rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl shadow-primary/5 border border-white/10"
         >
           {/* Header */}
           <div className="p-8 border-b border-white/5 flex justify-between items-start bg-white/5">
@@ -97,18 +97,20 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                 />
               )}
               <div className="flex flex-col justify-center">
-                <h2 className="text-4xl font-black tracking-tighter mb-1">{person.name}</h2>
-                <p className="text-emerald-500 text-xs font-black uppercase tracking-[0.2em] mb-4">
+                <h2 className="text-4xl font-bold tracking-tighter mb-1 font-montserrat uppercase italic">
+                  {person.name}
+                </h2>
+                <p className="text-primary text-xs font-black uppercase tracking-[0.2em] mb-4">
                   {person.category}
                 </p>
                 <div className="flex space-x-2">
                   {person.position === PoliticalPosition.SUPPORT && (
-                    <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-emerald-500/20 uppercase flex items-center">
+                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-primary/20 uppercase flex items-center">
                       <ShieldCheck className="mr-1" size={12} /> Патріот
                     </span>
                   )}
                   {person.position === PoliticalPosition.BETRAYAL && (
-                    <span className="bg-red-500/10 text-red-400 px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-red-500/20 uppercase flex items-center">
+                    <span className="bg-danger/10 text-danger px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-danger/20 uppercase flex items-center">
                       <ShieldAlert className="mr-1" size={12} /> Зашквар
                     </span>
                   )}
@@ -118,6 +120,14 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                     </span>
                   )}
                 </div>
+                <button 
+                  onClick={() => (window.location.href = '#')} 
+                  className="text-[9px] text-zinc-600 mt-2 hover:text-zinc-400 transition-colors text-left flex items-center group/ai"
+                  title="Дані згенеровані або перевірені AI на основі відкритих джерел"
+                >
+                  <Brain size={10} className="mr-1 opacity-50 group-hover/ai:text-purple-500" />
+                  Згенеровано AI. Оціночне судження. <span className="underline ml-1">Детальніше</span>
+                </button>
               </div>
             </div>
             <div className="flex items-center space-x-3">
@@ -141,10 +151,14 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
             {/* Bio Section */}
             <section>
               <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 mb-4 flex items-center">
-                <Clock className="mr-2 text-emerald-500" size={14} /> Аналіз позиції
+                <Clock className="mr-2 text-primary" size={14} /> Аналіз позиції
               </h4>
-              <p className="text-zinc-300 leading-relaxed text-lg font-medium italic opacity-80 border-l-4 border-emerald-500/30 pl-6">
+              <p className="text-zinc-300 leading-relaxed text-lg font-medium italic opacity-80 border-l-4 border-primary/30 pl-6">
                 "{person.description}"
+              </p>
+              <p className="text-[10px] text-zinc-600 mt-3 ml-6 font-bold uppercase tracking-widest italic flex items-center">
+                <Brain size={10} className="mr-2 text-purple-500/50" />
+                AI Verdict: Оціночне судження на основі аналізу доказів
               </p>
             </section>
 
@@ -241,14 +255,26 @@ const PersonModal: React.FC<PersonModalProps> = ({ person, onClose }) => {
                           {proof.text}
                         </p>
                         <div className="flex items-center justify-between">
-                          <a
-                            href={proof.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[10px] text-emerald-500 flex items-center hover:underline font-black uppercase tracking-widest"
-                          >
-                            <ExternalLink size={12} className="mr-1.5" /> Джерело
-                          </a>
+                          <div className="flex items-center space-x-4">
+                            <a
+                              href={proof.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-emerald-500 flex items-center hover:underline font-black uppercase tracking-widest"
+                              title={`Перейти до першоджерела: ${proof.sourceUrl}`}
+                            >
+                              <ExternalLink size={12} className="mr-1.5" /> Джерело
+                            </a>
+                            <a
+                              href={`https://web.archive.org/web/*/${proof.sourceUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-zinc-500 flex items-center hover:underline font-black uppercase tracking-widest"
+                              title="Переглянути архівну копію у Wayback Machine"
+                            >
+                              <Clock size={12} className="mr-1.5" /> Архів
+                            </a>
+                          </div>
                           <div className="flex items-center space-x-3">
                             <button
                               onClick={() => handleVote(proof.id, 'like')}

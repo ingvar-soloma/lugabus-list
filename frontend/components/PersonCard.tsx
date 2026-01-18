@@ -10,31 +10,25 @@ interface PersonCardProps {
 
 const PersonCard: React.FC<PersonCardProps> = ({ person, onClick }) => {
   const getPositionBadge = (pos: PoliticalPosition) => {
+    const label = (text: string, icon: React.ReactNode, bgColor: string, textColor: string, borderColor: string) => (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${bgColor} ${textColor} border ${borderColor}`}>
+        {icon} {text} <span className="opacity-50 ml-1">(AI)</span>
+      </span>
+    );
+
     switch (pos) {
       case PoliticalPosition.SUPPORT:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-            <ShieldCheck size={12} className="mr-1" /> Патріот
-          </span>
-        );
+        return label('Патріот', <ShieldCheck size={12} className="mr-1" />, 'bg-primary/10', 'text-primary', 'border-primary/20');
       case PoliticalPosition.BETRAYAL:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-red-500/10 text-red-500 border border-red-500/20">
-            <ShieldAlert size={12} className="mr-1" /> Зашквар
-          </span>
-        );
+        return label('Зашквар', <ShieldAlert size={12} className="mr-1" />, 'bg-danger/10', 'text-danger', 'border-danger/20');
       default:
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-500 border border-amber-500/20">
-            <ShieldQuestion size={12} className="mr-1" /> Морозиться
-          </span>
-        );
+        return label('Морозиться', <ShieldQuestion size={12} className="mr-1" />, 'bg-amber-500/10', 'text-amber-400', 'border-amber-500/20');
     }
   };
 
   let scoreColor = 'text-amber-500';
-  if (person.score > 50) scoreColor = 'text-emerald-500';
-  else if (person.score < 0) scoreColor = 'text-red-500';
+  if (person.score > 50) scoreColor = 'text-primary';
+  else if (person.score < 0) scoreColor = 'text-danger';
 
   return (
     <motion.div
@@ -42,7 +36,7 @@ const PersonCard: React.FC<PersonCardProps> = ({ person, onClick }) => {
       whileHover={{ y: -6, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onClick(person)}
-      className="group glass rounded-2xl p-6 cursor-pointer relative overflow-hidden transition-all duration-300 glass-hover border border-white/5 hover:border-emerald-500/30"
+      className="group glass rounded-2xl p-6 cursor-pointer relative overflow-hidden transition-all duration-300 glass-hover border border-white/5 hover:border-primary/30"
     >
       <div className="flex items-start justify-between mb-5">
         <div className="flex items-center space-x-4">
@@ -61,7 +55,7 @@ const PersonCard: React.FC<PersonCardProps> = ({ person, onClick }) => {
             )}
           </div>
           <div>
-            <h3 className="font-black text-lg leading-none tracking-tight group-hover:text-emerald-400 transition-colors">
+            <h3 className="font-bold text-lg leading-none tracking-tight group-hover:text-primary-light transition-colors font-montserrat">
               {person.name}
             </h3>
             <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest mt-1">
