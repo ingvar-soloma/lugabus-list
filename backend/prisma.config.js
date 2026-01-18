@@ -18,7 +18,7 @@ module.exports = {
   schema: 'prisma/schema.prisma',
   migrations: {
     path: 'prisma/migrations',
-    seed: 'ts-node -r tsconfig-paths/register prisma/seed.ts',
+    seed: 'ts-node prisma/seed.ts',
   },
   datasource: {
     url: dbUrl,
