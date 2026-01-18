@@ -1,9 +1,17 @@
 // Production-safe Prisma 7 config
-// It will look for DATABASE_URL in the environment first
-const dbUrl = process.env.DATABASE_URL;
+const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DATABASE_URL } = process.env;
 
-if (!dbUrl) {
-  console.error('CRITICAL ERROR: DATABASE_URL is not defined in the environment!');
+// If a full DATABASE_URL is provided, use it.
+// Otherwise, construct it from parts (common in Docker environments).
+let dbUrl = DATABASE_URL;
+
+if (!dbUrl && DB_USER && DB_PASSWORD && DB_NAME) {
+  const host = DB_HOST || 'localhost';
+  // Use URL object to properly encode special characters in password
+  const url = new URL(`postgresql://${host}:5432/${DB_NAME}`);
+  url.username = DB_USER;
+  url.password = DB_PASSWORD;
+  dbUrl = url.toString();
 }
 
 module.exports = {

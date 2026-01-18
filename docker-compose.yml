@@ -14,7 +14,10 @@ services:
       dockerfile: backend/Dockerfile
     # No ports here, they will be in docker-compose.override.yml for dev
     environment:
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: db
       JWT_SECRET: ${JWT_SECRET}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       CORS_ORIGIN: ${CORS_ORIGIN}
