@@ -12,16 +12,22 @@ services:
     environment:
       DOMAIN: ${DOMAIN:-lugalist.ingvarsoloma.dev}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-ingvar.soloma@gmail.com}
+    networks:
+      - lugabus-net
     depends_on:
       - frontend
       - backend
 
   frontend:
     restart: always
+    networks:
+      - lugabus-net
     # No ports exposed to host, Caddy will proxy to it
 
   backend:
     restart: always
+    networks:
+      - lugabus-net
     depends_on:
       db:
         condition: service_healthy
@@ -29,11 +35,17 @@ services:
 
   db:
     restart: always
+    networks:
+      - lugabus-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+networks:
+  lugabus-net:
+    external: false
 
 volumes:
   caddy_data:
