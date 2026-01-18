@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Person, PoliticalPosition, ThemeClasses } from '../types';
+import { Person, PoliticalPosition, ThemeClasses } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,

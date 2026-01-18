@@ -1,16 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { AppProvider, useAppContext } from './store/AppContext';
+import { AppProvider, useAppContext } from '@/store/AppContext';
 import { Search, LogOut, AlertCircle, Mail, Plus, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import StatsBar from './components/StatsBar';
-import PersonCard from './components/PersonCard';
-import PersonModal from './components/PersonModal';
-import AdminDashboard from './components/AdminDashboard';
-import AuthModal from './components/AuthModal';
-import AddFigureModal from './components/AddFigureModal';
-import { CATEGORIES } from './constants';
-import { Person, UserRole, ThemeClasses } from './types';
-import { TermsOfServicePage, PrivacyPolicyPage, AboutAIPage } from './components/LegalPages';
+import StatsBar from '@/components/StatsBar';
+import PersonCard from '@/components/PersonCard';
+import PersonModal from '@/components/PersonModal';
+import AdminDashboard from '@/components/AdminDashboard';
+import AuthModal from '@/components/AuthModal';
+import AddFigureModal from '@/components/AddFigureModal';
+import { CATEGORIES } from '@/constants';
+import { Person, UserRole, ThemeClasses } from '@/types';
+import { TermsOfServicePage, PrivacyPolicyPage, AboutAIPage } from '@/components/LegalPages';
 
 // Page Components
 const MethodologyPage = ({ themeClasses }: { themeClasses: ThemeClasses }) => (

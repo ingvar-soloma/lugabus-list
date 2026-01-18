@@ -14,9 +14,9 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { useAppContext } from '../store/AppContext';
-import { apiService } from '../services/apiService';
-import { AIInsight, AuditLog, User as UserType, Revision } from '../types';
+import { useAppContext } from '@/store/AppContext';
+import { apiService } from '@/services/apiService';
+import { AIInsight, AuditLog, User as UserType, Revision } from '@/types';
 import { motion } from 'framer-motion';
 
 const AdminDashboard: React.FC = () => {

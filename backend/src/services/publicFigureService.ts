@@ -1,6 +1,6 @@
-import { PublicFigureRepository } from '../repositories/publicFigureRepository';
-import { GetPublicFiguresQuery } from '../models/types/publicFigureTypes';
-import { BaseService } from './baseService';
+import { PublicFigureRepository } from '@/repositories/publicFigureRepository';
+import { GetPublicFiguresQuery } from '@/models/types/publicFigureTypes';
+import { BaseService } from '@/services/baseService';
 
 interface CreatePersonDTO {
   name: string;

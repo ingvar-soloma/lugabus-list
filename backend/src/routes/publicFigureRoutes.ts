@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { PublicFigureController } from '../controllers/publicFigureController';
-import { validate } from '../middlewares/validate';
+import { PublicFigureController } from '@/controllers/publicFigureController';
+import { validate } from '@/middlewares/validate';
 import {
   getPublicFiguresSchema,
   getPublicFigureByIdSchema,
   createPublicFigureSchema,
-} from '../models/schemas/publicFigureSchemas';
-import { authMiddleware } from '../middlewares/authMiddleware';
+} from '@/models/schemas/publicFigureSchemas';
+import { authMiddleware } from '@/middlewares/authMiddleware';
 
 const router = Router();
 const controller = new PublicFigureController();

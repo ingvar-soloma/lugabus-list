@@ -1,5 +1,5 @@
 import React from 'react';
-import { Person, PoliticalPosition, ThemeClasses } from '../types';
+import { Person, PoliticalPosition, ThemeClasses } from '@/types';
 
 interface PersonCardProps {
   person: Person;
