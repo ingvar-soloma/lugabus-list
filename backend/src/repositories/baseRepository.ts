@@ -4,11 +4,24 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const dbUrl =
-  process.env.DATABASE_URL ||
-  `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST || 'db'}:5432/${process.env.DB_NAME}`;
+dotenv.config();
 
-const adapter = new PrismaPg({ connectionString: dbUrl });
+let dbUrl = process.env.DATABASE_URL;
+
+if (!dbUrl && process.env.DB_USER && process.env.DB_PASSWORD) {
+  try {
+    const host = process.env.DB_HOST || 'db';
+    const name = process.env.DB_NAME || 'lugabus';
+    const url = new URL(`postgresql://${host}:5432/${name}`);
+    url.username = process.env.DB_USER!;
+    url.password = process.env.DB_PASSWORD!;
+    dbUrl = url.toString();
+  } catch (err) {
+    console.error('Failed to construct DATABASE_URL:', err);
+  }
+}
+
+const adapter = new PrismaPg({ connectionString: dbUrl! });
 export const prisma = new PrismaClient({ adapter });
 
 export class BaseRepository {
