@@ -1,4 +1,5 @@
 {
-  "*.{ts,js,json,md}": ["prettier --write"],
-  "*.{ts,js}": ["eslint --fix"]
+  "*.{ts,tsx,js,jsx}": ["eslint --fix", "prettier --write"],
+  "backend/prisma/schema.prisma": ["pnpm --filter backend exec prisma validate"],
+  "*.{json,md,css,scss}": ["prettier --write"]
 }
