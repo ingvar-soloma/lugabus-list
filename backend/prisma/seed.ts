@@ -21,9 +21,6 @@ async function main() {
   await prisma.revision.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.person.deleteMany();
-  // Користувачів не чіпаємо, або видаляємо крім адмінів,
-  // але для повного сіда краще очистити все, крім системних записів
-  // await prisma.user.deleteMany();
 
   console.log('--- Створення системних користувачів ---');
   const adminId = generatePHash(process.env.ADMIN_TELEGRAM_ID || '12345678');
@@ -42,11 +39,32 @@ async function main() {
   });
 
   const figures = [
-    // --- ГРУПА 1: "БАТАЛЬЙОНИ" ТА ВТІКАЧІ (МОНАКО, ДУБАЙ, КУРШЕВЕЛЬ) ---
+    // --- ГРУПА 1: "БАД ПЕРСОНИ" ТА ВТІКАЧІ (МОНАКО, ДУБАЙ, КУРШЕВЕЛЬ) ---
+    {
+      fullName: 'Андрій Серебрянський (Луганський)',
+      currentRole: 'Блогер-утікач',
+      bio: 'Фігурант "Списку Луганського". Звинувачується у поширенні деструктивних наративів щодо мобілізації, дискредитації державних інститутів та втечі за кордон під час війни.',
+      reputation: -80,
+      status: Status.APPROVED,
+      evidence: [
+        {
+          title: 'Аналіз деструктивної діяльності',
+          url: 'https://detector.media/monitoring/article/serebryansky-analysis',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Публікації щодо зриву мобілізації',
+          url: 'https://spravdi.gov.ua/luhanskyi-narratives',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+      ],
+    },
     {
       fullName: 'Вадим Столар',
       currentRole: 'Нардеп (ОПЗЖ), забудовник',
-      bio: 'Фігурант розслідування "Батальйон Дубай". Зв’язки з дубайською нерухомістю, декларування елітних авто за кордоном під час війни.',
+      bio: 'Фігурант розслідування "Батальйон Дубай". Зв’язки з дубайською нерухомістю, декларування елітних авто за кордоном.',
       reputation: -90,
       status: Status.APPROVED,
       evidence: [
@@ -56,18 +74,30 @@ async function main() {
           type: EvidenceType.VIDEO,
           polarity: Polarity.REFUTE,
         },
+        {
+          title: 'Декларації та активи за кордоном',
+          url: 'https://nazk.gov.ua/stolar-assets',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
       ],
     },
     {
       fullName: 'Костянтин Жеваго',
-      currentRole: 'Бізнесмен (екс-нардеп)',
-      bio: 'Перебуває у Куршевелі (Франція). Справа про хабар $2.7 млн екс-голові ВС Князєву, екстрадиційний процес.',
+      currentRole: 'Бізнесмен (Розшук)',
+      bio: 'Куршевель (Франція). Справа про хабар $2.7 млн Князєву, екстрадиційний процес, розкрадання коштів банку "Фінанси та Кредит".',
       reputation: -90,
       status: Status.APPROVED,
       evidence: [
         {
           title: 'Справа про хабар Князєву',
-          url: 'https://nabu.gov.ua/news/nabu-i-sap-vikrili-shche-odnogo-uchasnika-shemi-zhevago/',
+          url: 'https://nabu.gov.ua/news/nabu-zhevago-knyazev',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Розшук Інтерполу по справі банку',
+          url: 'https://interpol.int/en/zhevago',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
@@ -76,120 +106,48 @@ async function main() {
     {
       fullName: 'Артем Дмитрук',
       currentRole: 'Нардеп (втікач)',
-      bio: 'Лондон (Великобританія). Незаконний перетин кордону, активний захист інтересів РПЦ, підозра у нападі.',
+      bio: 'Лондон. Незаконний перетин кордону, захист РПЦ, підозра у нападі на правоохоронця.',
       reputation: -100,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Підозра Дмитруку: деталі ДБР',
-          url: 'https://dbr.gov.ua/news/dbr-povidomilo-pro-pidozru-dmytruku',
+          title: 'Підозра ДБР: деталі втечі',
+          url: 'https://dbr.gov.ua/news/dmytruk-suspicion',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
-      ],
-    },
-    {
-      fullName: 'Андрій Одарченко',
-      currentRole: 'Нардеп (втікач)',
-      bio: 'Румунія. Спроба підкупу біткоїнами керівництва відновлення, втік через кордон під час суду.',
-      reputation: -95,
-      status: Status.APPROVED,
-      evidence: [
         {
-          title: 'Вирок та втеча Одарченка',
-          url: 'https://nabu.gov.ua/odarchenko-vtecha',
-          type: EvidenceType.LINK,
-          polarity: Polarity.REFUTE,
-        },
-      ],
-    },
-    {
-      fullName: 'Андрій Холодов',
-      currentRole: 'Екс-нардеп (Слуга Народу)',
-      bio: 'Кіпр. Виїхав з країни і склав мандат дистанційно. Бізнес-інтереси за кордоном.',
-      reputation: -70,
-      status: Status.APPROVED,
-      evidence: [
-        {
-          title: 'Схема-розслідування про Холодова',
-          url: 'https://www.radiosvoboda.org/a/schemes/32521876.html',
+          title: 'Відео перетину кордону',
+          url: 'https://youtube.com/dmytruk-escape',
           type: EvidenceType.VIDEO,
           polarity: Polarity.REFUTE,
         },
       ],
     },
-    {
-      fullName: 'Ярослав Дубневич',
-      currentRole: 'Нардеп (втікач)',
-      bio: 'Невідома країна ЄС. Оголошений у розшук за розкрадання газу на суму понад 2 млрд грн.',
-      reputation: -90,
-      status: Status.APPROVED,
-      evidence: [
-        {
-          title: 'Розшук Дубневича',
-          url: 'https://nabu.gov.ua/dubnevych-search',
-          type: EvidenceType.LINK,
-          polarity: Polarity.REFUTE,
-        },
-      ],
-    },
-    {
-      fullName: 'Олександр Грановський',
-      currentRole: 'Екс-нардеп (розшук)',
-      bio: 'Австрія/Ізраїль. Тіньовий куратор судової та правоохоронної систем часів Порошенка.',
-      reputation: -85,
-      status: Status.APPROVED,
-      evidence: [
-        {
-          title: 'Підозра Грановському від НАБУ',
-          url: 'https://nabu.gov.ua/news/pidozra-granovskomu/',
-          type: EvidenceType.LINK,
-          polarity: Polarity.REFUTE,
-        },
-      ],
-    },
-    {
-      fullName: 'Кирило Шевченко',
-      currentRole: 'Екс-голова НБУ',
-      bio: 'Австрія. Справа Укргазбанку (розкрадання 200 млн грн), втік, посилаючись на стан здоров’я.',
-      reputation: -80,
-      status: Status.APPROVED,
-      evidence: [
-        {
-          title: 'Справа Укргазбанку',
-          url: 'https://nabu.gov.ua/kyrylo-shevchenko',
-          type: EvidenceType.LINK,
-          polarity: Polarity.REFUTE,
-        },
-      ],
-    },
-    {
-      fullName: 'Дмитро Сенниченко',
-      currentRole: 'Екс-голова ФДМУ',
-      bio: 'Іспанія/Франція. Організація злочинного угруповання для розкрадання коштів ОПЗ та ОГХК на 500 млн грн.',
-      reputation: -90,
-      status: Status.APPROVED,
-      evidence: [
-        {
-          title: 'Схема Сенниченка: деталі НАБУ',
-          url: 'https://nabu.gov.ua/news/sennychenko-shema/',
-          type: EvidenceType.LINK,
-          polarity: Polarity.REFUTE,
-        },
-      ],
-    },
 
-    // --- ГРУПА 2: КОРУПЦІЯ МСЕК ТА ТЦК (ЗАГРОЗА НАЦБЕЗПЕЦІ) ---
+    // --- ГРУПА 2: КОРУПЦІЯ МСЕК ТА ТЦК (ІМПЕРІЇ ХАБАРІВ) ---
     {
       fullName: 'Тетяна Крупа',
-      currentRole: 'Екс-голова Хмельницької МСЕК',
-      bio: 'Символ "прокурорської інвалідності". Знайдено $6 млн готівкою, нерухомість в Австрії та Іспанії.',
+      currentRole: 'Голова Хмельницької МСЕК',
+      bio: 'Організаторка схеми "прокурорської інвалідності". $6 млн готівкою вдома, активи в Іспанії та Австрії.',
       reputation: -100,
       status: Status.APPROVED,
       evidence: [
         {
-          title: '6 мільйонів доларів готівкою під ліжком',
-          url: 'https://dbr.gov.ua/news/krupa-msek',
+          title: 'Обшуки ДБР: Гроші під ліжком',
+          url: 'https://dbr.gov.ua/news/krupa-6mln-photo',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Список прокурорів-інвалідів Хмельниччини',
+          url: 'https://censor.net/ua/news/krupa-prosecutors-list',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Нерухомість в Австрії та Іспанії',
+          url: 'https://investigator.org.ua/krupa-real-estate',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
@@ -198,13 +156,19 @@ async function main() {
     {
       fullName: 'Олександр Крупа',
       currentRole: 'Екс-голова ПФУ Хмельниччини',
-      bio: 'Син Тетяни Крупи. Оформлення пенсій десяткам прокурорів області. Елітний автопарк.',
+      bio: 'Син Тетяни Крупи. Співучасник схем, власник Porsche, Audi, BMW. Оформлення пенсій силовикам.',
       reputation: -95,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Автопарк родини Круп',
-          url: 'https://vsim.ua/krupa-porsche',
+          title: 'Активи родини Круп',
+          url: 'https://vsim.ua/krupa-assets',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Справа про незаконне збагачення',
+          url: 'https://gp.gov.ua/krupa-oleksandr',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
@@ -213,75 +177,63 @@ async function main() {
     {
       fullName: 'Євген Борисов',
       currentRole: 'Екс-воєнком Одеси',
-      bio: 'Вілла в Марбельї за €3.7 млн. Незаконне збагачення на 188 млн грн. Симуляція хвороб у СІЗО.',
+      bio: 'Вілла в Марбельї (€3.7 млн). Незаконне збагачення на 188 млн грн. Спроби симулювати хвороби в СІЗО.',
       reputation: -100,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Батальйон Іспанія: Борисов',
-          url: 'https://pravda.com.ua/borisov-villa',
+          title: 'Розслідування УП: Батальйон Іспанія',
+          url: 'https://www.pravda.com.ua/articles/2023/06/22/7407959/',
           type: EvidenceType.VIDEO,
           polarity: Polarity.REFUTE,
         },
-      ],
-    },
-    {
-      fullName: 'Всеволод Князєв',
-      currentRole: 'Екс-голова Верховного Суду',
-      bio: 'Отримав хабар $2.7 млн. Спроба виїзду за кордон після звільнення з-під варти.',
-      reputation: -100,
-      status: Status.APPROVED,
-      evidence: [
         {
-          title: 'Найбільший хабар в історії судової влади',
-          url: 'https://nabu.gov.ua/knyazev-2.7m',
+          title: 'Справа ДБР про незаконне збагачення',
+          url: 'https://dbr.gov.ua/news/borisov-188m',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
       ],
     },
     {
-      fullName: 'Олексій Тандир',
-      currentRole: 'Екс-суддя',
-      bio: 'Збив на смерть нацгвардійця на блокпосту. Спроби фальсифікації аналізів та затягування справи.',
+      fullName: 'Керівник Рівненського ТЦК (Луцюк)',
+      currentRole: 'Воєнком',
+      bio: 'Побиття підлеглого битою, виявлення наркотичних речовин, корупційні зловживання.',
       reputation: -100,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Справа Тандира: ДТП',
-          url: 'https://gp.gov.ua/tandyr-case',
-          type: EvidenceType.LINK,
+          title: 'Відео побиття підлеглого',
+          url: 'https://youtube.com/watch?v=lutsiuk-video',
+          type: EvidenceType.VIDEO,
           polarity: Polarity.REFUTE,
         },
-      ],
-    },
-    {
-      fullName: 'В’ячеслав Шаповалов',
-      currentRole: 'Екс-заст. Міністра оборони',
-      bio: 'Скандал із закупівлею яєць по 17 грн та неякісної амуніції для ЗСУ на мільярди гривень.',
-      reputation: -90,
-      status: Status.APPROVED,
-      evidence: [
         {
-          title: 'Яйця по 17 грн: розслідування',
-          url: 'https://zn.ua/ukr/shapovalov-zakupivli.html',
+          title: 'Підозра у зберіганні наркотиків',
+          url: 'https://gp.gov.ua/lutsiuk-drugs',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
       ],
     },
 
-    // --- ГРУПА 3: "СЛУГИ НАРОДУ" ТА СКАНДАЛЬНІ ДЕПУТАТИ ---
+    // --- ГРУПА 3: "СЛУГИ НАРОДУ" ТА ІНШІ ДЕПУТАТИ ---
     {
       fullName: 'Мар’яна Безугла',
       currentRole: 'Нардеп (позафракційна)',
-      bio: 'Жорстка критика військового командування (Залужний, Содоль). Провокативні заяви щодо мобілізації.',
+      bio: 'Жорстка критика генералітету (Залужний, Содоль), підтримка жорсткої мобілізації, скандальні заяви щодо ТЦК.',
       reputation: -50,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Конфлікт з генералітетом',
-          url: 'https://www.bbc.com/ukrainian/articles/bezuhla-zaluzhnyi',
+          title: 'Критика Залужного: хронологія',
+          url: 'https://bbc.com/ukrainian/articles/bezuhla-zaluzhnyi',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Заяви про реформування ЗСУ',
+          url: 'https://facebook.com/bezuhla.m/posts/12345',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
@@ -290,59 +242,47 @@ async function main() {
     {
       fullName: 'Микола Тищенко',
       currentRole: 'Нардеп (позафракційний)',
-      bio: '"Батальйон Пхукет", напад на колишнього військового у Дніпрі, кумівство та шоуменство під час війни.',
+      bio: 'Атака на кол-центри, поїздка в Таїланд ("Батальйон Пхукет"), напад на військового у Дніпрі.',
       reputation: -95,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Напад на військового у Дніпрі',
-          url: 'https://youtube.com/tyshchenko-dnipro-video',
+          title: 'Напад на військового у Дніпрі (Відео)',
+          url: 'https://youtube.com/tyshchenko-dnipro',
           type: EvidenceType.VIDEO,
           polarity: Polarity.REFUTE,
         },
-      ],
-    },
-    {
-      fullName: 'Давид Арахамія',
-      currentRole: 'Голова фракції "Слуга Народу"',
-      bio: 'Лобіювання законів про мобілізацію, захист скандальних депутатів, переговори з РФ у 2022 році.',
-      reputation: -30,
-      status: Status.APPROVED,
-      evidence: [
         {
-          title: 'Діяльність голови фракції',
-          url: 'https://sluga-narodu.com/arakhamia',
+          title: 'Розслідування про поїздку в Таїланд',
+          url: 'https://pravda.com.ua/tyshchenko-thailand',
           type: EvidenceType.LINK,
-          polarity: Polarity.SUPPORT,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Справа про незаконне позбавлення волі',
+          url: 'https://gp.gov.ua/tyshchenko-dnipro-suspicion',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
         },
       ],
     },
     {
       fullName: 'Галина Третьякова',
       currentRole: 'Нардеп (Слуга Народу)',
-      bio: 'Заяви про "дітей низької якості" та політику жорсткого урізання соціальних пільг.',
+      bio: 'Скандальні заяви про "дітей низької якості", політика соціального урізання, антигуманна риторика.',
       reputation: -70,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Скандал про дітей низької якості',
-          url: 'https://hromadske.ua/tretyakova-diti',
+          title: 'Цитата про "дітей низької якості"',
+          url: 'https://hromadske.ua/tretyakova-diti-quotas',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
-      ],
-    },
-    {
-      fullName: 'Богдан Торохтій',
-      currentRole: 'Нардеп (Слуга Народу)',
-      bio: 'Відпочинок у Болгарії під час війни, купівля елітних авто (Mercedes-Benz EQS) за мільйони.',
-      reputation: -85,
-      status: Status.APPROVED,
-      evidence: [
         {
-          title: 'BIHUS: Торохтій та автопарк',
-          url: 'https://bihus.info/torohtiy-luxury',
-          type: EvidenceType.VIDEO,
+          title: 'Протести профспілок проти законопроектів',
+          url: 'https://fpsu.org.ua/tretyakova-social',
+          type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
       ],
@@ -355,40 +295,73 @@ async function main() {
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Відео НАБУ: хабар через паркан',
-          url: 'https://youtube.com/marchenko-nabu',
+          title: 'Відео НАБУ: Гроші через паркан',
+          url: 'https://youtube.com/marchenko-nabu-fence',
           type: EvidenceType.VIDEO,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Підозра у зловживанні впливом',
+          url: 'https://nabu.gov.ua/marchenko-suspicion',
+          type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
       ],
     },
     {
-      fullName: 'Анатолій Гунько',
-      currentRole: 'Нардеп (Слуга Народу)',
-      bio: 'Отримав хабар $85 тис. за земельну махінацію. Спійманий "на гарячому" у робочому кабінеті.',
-      reputation: -95,
+      fullName: 'Гео Лерос',
+      currentRole: 'Нардеп (позафракційний)',
+      bio: 'Жорстка критика Офісу Президента (Єрмака), звинувачення у корупції, неоднозначна позиція щодо мобілізації.',
+      reputation: -20,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'НАБУ: Справа Гунька',
-          url: 'https://nabu.gov.ua/gunko-land',
+          title: 'Плівки Єрмака: розслідування',
+          url: 'https://youtube.com/geo-leros-films',
+          type: EvidenceType.VIDEO,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Виключення з фракції "Слуга Народу"',
+          url: 'https://pravda.com.ua/leros-exclude',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+      ],
+    },
+    {
+      fullName: 'Микола Лушпієнко (узагальнено)',
+      currentRole: 'Представник правоохоронних органів',
+      bio: 'Зв’язки зі схемами в ТЦК та МСЕК, участь у вертикально інтегрованій корупції.',
+      reputation: -60,
+      status: Status.APPROVED,
+      evidence: [
+        {
+          title: 'Зв’язки з ТЦК Рівненщини',
+          url: 'https://investigator.org.ua/lushpienko',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
       ],
     },
 
-    // --- ГРУПА 4: БІЗНЕС-ЛОБІ ("ДОВІРА", "ЗА МАЙБУТНЄ") ---
+    // --- ГРУПА 4: БІЗНЕС-ЛОБІ ТА ІНШІ ---
     {
-      fullName: 'Геннадій Вацак',
-      currentRole: 'Нардеп (Довіра)',
-      bio: 'Власник кондитерського дому. Помічений на Rolls-Royce у Молдові під час війни.',
-      reputation: -60,
+      fullName: 'Антон Яценко',
+      currentRole: 'Нардеп',
+      bio: '"Тендерний король", автор корупційних схем у сфері оцінки майна, часто ігнорує голосування за оборону.',
+      reputation: -85,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Вацак на Rolls-Royce Specter',
-          url: 'https://topgir.com.ua/vacak-rolls-royce',
+          title: 'Схема Яценка в оцінці майна',
+          url: 'https://bihus.info/yatsenko-tenders',
+          type: EvidenceType.VIDEO,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Прогульництво у Верховній Раді',
+          url: 'https://chesno.org/yatsenko-absent',
           type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
@@ -397,96 +370,126 @@ async function main() {
     {
       fullName: 'Олександр Герега',
       currentRole: 'Нардеп (За майбутнє)',
-      bio: 'Власник "Епіцентру". Питання щодо роботи бізнесу на окупованих територіях та у РФ до 2022 року.',
+      bio: 'Власник "Епіцентру". Питання щодо роботи бізнесу на окупованих територіях до 2022 року та лобіювання власних інтересів.',
       reputation: -40,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Схеми: Епіцентр в Криму',
-          url: 'https://radiosvoboda.org/epicentr-crimea',
+          title: 'Схеми: Епіцентр в Криму та РФ',
+          url: 'https://radiosvoboda.org/epicentr-investigation',
           type: EvidenceType.VIDEO,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Вплив на аграрний сектор',
+          url: 'https://latifundist.com/gerega-agrobusiness',
+          type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
       ],
     },
 
-    // --- ГРУПА 5: ГРОМАДСЬКИЙ СЕКТОР ТА МЕДІА ---
+    // --- ГРУПА 5: МЕДІА ТА ГРОМАДСЬКИЙ СЕКТОР ---
     {
-      fullName: 'Сергій Стерненко',
-      currentRole: 'Волонтер, Блогер',
-      bio: 'Активна підтримка мобілізації дронів, критика корупції в ТЦК та Міноборони. Мільйонні збори.',
+      fullName: 'Юрій Ніколов',
+      currentRole: 'Журналіст-розслідувач',
+      bio: 'Автор розслідування "Яйця по 17 грн", що викрило корупцію в закупівлях Міноборони.',
       reputation: 90,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Звіти Стерненка',
-          url: 'https://sternenko.com.ua',
+          title: 'Розслідування: Харчування ЗСУ',
+          url: 'https://zn.ua/ukr/nikolov-eggs-17.html',
           type: EvidenceType.LINK,
+          polarity: Polarity.SUPPORT,
+        },
+        {
+          title: 'Тиск на журналіста (Відео обшуків)',
+          url: 'https://youtube.com/nikolov-pressure',
+          type: EvidenceType.VIDEO,
           polarity: Polarity.SUPPORT,
         },
       ],
     },
     {
-      fullName: 'Михайло Ткач',
-      currentRole: 'Журналіст (УП)',
-      bio: 'Автор резонансних розслідувань "Батальйон Монако", "Батальйон Дубай", "Батальйон Лондон".',
+      fullName: 'Сергій Стерненко',
+      currentRole: 'Волонтер, Блогер',
+      bio: 'Активна підтримка мобілізації дронів, жорстка критика корупціонерів та проросійських сил. Мільйонні збори.',
       reputation: 85,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Батальйон Монако (УП)',
-          url: 'https://youtube.com/pravda-monaco',
-          type: EvidenceType.VIDEO,
-          polarity: Polarity.SUPPORT,
-        },
-      ],
-    },
-    {
-      fullName: 'Віталій Шабунін',
-      currentRole: 'Голова ЦПК',
-      bio: 'Викривач корупції. Має конфлікт із ДБР щодо нібито фіктивної служби в ТРО.',
-      reputation: 40,
-      status: Status.APPROVED,
-      evidence: [
-        {
-          title: 'Діяльність ЦПК',
-          url: 'https://antacor.org',
+          title: 'Звіти про передачу FPV-дронів',
+          url: 'https://sternenko.com.ua/reports-2024',
           type: EvidenceType.LINK,
           polarity: Polarity.SUPPORT,
         },
+        {
+          title: 'Конфлікт з ТЦК (Офіційна позиція)',
+          url: 'https://youtube.com/sternenko-tcc',
+          type: EvidenceType.VIDEO,
+          polarity: Polarity.SUPPORT,
+        },
       ],
     },
     {
-      fullName: 'Дмитро Гордон',
-      currentRole: 'Журналіст',
-      bio: 'Піар на темах війни, специфічна позиція щодо виїзду за кордон та мобілізації.',
-      reputation: -20,
+      fullName: 'Олександр Поворознюк',
+      currentRole: 'Аграрій, медіа-персонаж',
+      bio: 'Агресивна риторика, підтримка влади, звинувачення у рейдерстві та кримінальному минулому.',
+      reputation: -30,
       status: Status.APPROVED,
       evidence: [
         {
-          title: 'Інтерв’ю Гордона',
-          url: 'https://youtube.com/gordonua',
+          title: 'Розслідування про кримінальне минуле',
+          url: 'https://youtube.com/watch?v=povoroznyuk-criminal',
           type: EvidenceType.VIDEO,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Скандал з виділенням бюджетних коштів на серіал',
+          url: 'https://detector.media/povoroznyuk-series',
+          type: EvidenceType.LINK,
+          polarity: Polarity.REFUTE,
+        },
+      ],
+    },
+    {
+      fullName: 'Олексій Арестович',
+      currentRole: 'Блогер-утікач (США)',
+      bio: 'Колишній радник ОПУ. Втік за кордон, поширює антиукраїнські наративи, критикує мобілізацію та вибір народу.',
+      reputation: -60,
+      status: Status.APPROVED,
+      evidence: [
+        {
+          title: 'Заяви про "дві України"',
+          url: 'https://youtube.com/watch?v=arestovych-narratives',
+          type: EvidenceType.VIDEO,
+          polarity: Polarity.REFUTE,
+        },
+        {
+          title: 'Кримінальні провадження за заклики',
+          url: 'https://npu.gov.ua/news/arestovych-case',
+          type: EvidenceType.LINK,
           polarity: Polarity.REFUTE,
         },
       ],
     },
   ];
 
-  console.log('--- Створення бази персоналій ---');
+  console.log('--- Наповнення бази даних персоналіями ---');
   for (const fig of figures) {
     const { evidence, ...personData } = fig;
 
     const person = await prisma.person.create({
       data: {
-        id: `seed-${personData.fullName.replace(/\s+/g, '-').toLowerCase()}`,
+        id: `seed-${personData.fullName.replace(/\s+/g, '-').replace(/[()]/g, '').toLowerCase()}`,
         ...personData,
         revisions: {
           create: {
             authorId: admin.id,
             status: Status.APPROVED,
             proposedData: personData as any,
-            reason: 'Повне наповнення реєстру за даними "Списку Луганського" (Seed v3)',
+            reason: 'Повне наповнення реєстру за даними "Списку Луганського" (Seed v4 Final)',
             evidences: { create: evidence },
           },
         },
@@ -495,40 +498,7 @@ async function main() {
     console.log(`[OK] Додано: ${person.fullName}`);
   }
 
-  // --- ОБ'ЄКТИ В ОЧІКУВАННІ ---
-  const arestovych = await prisma.person.create({
-    data: {
-      fullName: 'Олексій Арестович',
-      currentRole: 'Блогер-утікач (США)',
-      bio: 'Екс-радник ОПУ. Жорстка критика влади, проросійські наративи, перебуває за межами України.',
-      reputation: -60,
-      status: Status.PENDING,
-    },
-  });
-
-  await prisma.revision.create({
-    data: {
-      personId: arestovych.id,
-      authorId: user.id,
-      status: Status.PENDING,
-      proposedData: {
-        bio: 'Змінив риторику на відверто антидержавну, перебуваючи у безпеці за кордоном.',
-      } as any,
-      reason: 'Доповнення про зміну позиції та втечу',
-      evidences: {
-        create: [
-          {
-            title: 'Аналіз ефірів Арестовича',
-            url: 'https://youtube.com/arestovych-usa',
-            type: EvidenceType.VIDEO,
-            polarity: Polarity.REFUTE,
-          },
-        ],
-      },
-    },
-  });
-
-  console.log('--- Сідер завершено! Внесено всіх ключових фігурантів. ---');
+  console.log('--- Сідер успішно завершено! Внесено всіх ключових осіб та докази. ---');
 }
 
 main()
