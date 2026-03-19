@@ -24,3 +24,44 @@
         Referrer-Policy no-referrer-when-downgrade
     }
 }
+
+cognitiveprofile.ingvarsoloma.dev {
+    # Backend API - handle /api first
+    handle /api/* {
+        reverse_proxy 172.17.0.1:8005
+    }
+
+    # Frontend - handle everything else
+    handle {
+        reverse_proxy 172.17.0.1:3005 {
+            @404 status 404
+            handle_response @404 {
+                rewrite * /
+                reverse_proxy 172.17.0.1:3005
+            
+            }
+        }
+    }
+}
+
+# Основний домен — поки що тільки редірект
+ingvarsoloma.dev {
+    # 301 редірект на піддомен (тимчасово)
+    redir https://cv.ingvarsoloma.dev{uri} permanent
+}
+
+# Ваш поточний сайт на піддомені
+cv.ingvarsoloma.dev {
+    root * /var/www/cv-portfolio
+    file_server
+    encode gzip zstd
+    
+    header {
+        Strict-Transport-Security max-age=31536000;
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy no-referrer-when-downgrade
+    }
+
+    try_files {path} /index.html
+}

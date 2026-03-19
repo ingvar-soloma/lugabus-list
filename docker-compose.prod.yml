@@ -9,6 +9,7 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
+      - /var/www/cv-portfolio:/var/www/cv-portfolio:ro
     environment:
       DOMAIN: ${DOMAIN:-lugalist.ingvarsoloma.dev}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-ingvar.soloma@gmail.com}
