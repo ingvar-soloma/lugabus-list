@@ -71,8 +71,14 @@ np42.dev, www.np42.dev, np42.ingvarsoloma.dev, www.np42.ingvarsoloma.dev, cognit
 
 # Основний домен — поки що тільки редірект
 ingvarsoloma.dev {
-    # 301 редірект на піддомен (тимчасово)
-    redir https://cv.ingvarsoloma.dev{uri} permanent
+    root * /opt/professional-blog
+    file_server
+    encode gzip zstd
+    
+    import security
+
+
+    try_files {path} /index.html
 }
 
 # Ваш поточний сайт на піддомені
