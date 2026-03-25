@@ -59,17 +59,21 @@ np42.dev, www.np42.dev, np42.ingvarsoloma.dev, www.np42.ingvarsoloma.dev, cognit
     # Frontend SPA Logic
     handle {
         reverse_proxy 172.17.0.1:3005 {
-            @spa_error status 404
-            handle_response @spa_error {
-                # В. Уникаємо "HTML замість картинок"
-                @not_static not path_regexp \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|json|txt|map)$
-                
-                # Тільки якщо це не статика, робимо редірект на index
-                rewrite @not_static /
-                reverse_proxy @not_static 172.17.0.1:3005
+            intercept_errors
+        }
+        
+        handle_errors {
+            # В. Уникаємо "HTML замість картинок"
+            # Робимо fallback на index тільки якщо це НЕ запит до статичного файлу (js, css, png...)
+            @spa_fallback {
+                expression {err.status_code} == 404
+                not path_regexp \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|json|txt|map)$
             }
+            rewrite @spa_fallback /
+            reverse_proxy @spa_fallback 172.17.0.1:3005
         }
     }
+
 
 }
 
