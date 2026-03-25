@@ -36,7 +36,11 @@
 ;     }
 ; }
 
-np42.dev, cognitiveprofile.ingvarsoloma.dev {
+np42.dev, www.np42.dev, cognitiveprofile.ingvarsoloma.dev {
+    # Редірект з www на основний домен
+    @www host www.np42.dev
+    redir @www https://np42.dev{uri} permanent
+
     # Кодування для швидкості
     encode zstd gzip
     
