@@ -13,43 +13,48 @@ help:
 	@echo "  make down         - Stop and remove all containers"
 	@echo "  make logs         - View output logs (follow)"
 	@echo "  make shell-back   - Open shell in backend container"
+	@echo "  make up-db        - Start only the db container (detached)"
 	@echo "  make ci           - Run CI checks locally (pnpm)"
 	@echo "  make ci-docker    - Run CI checks in Docker"
 
 # Development
 .PHONY: dev
 dev:
-	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 .PHONY: dev-d
 dev-d:
-	docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 
 .PHONY: build-dev
 build-dev:
-	docker-compose -f docker-compose.yml -f docker-compose.dev.yml build
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml build
 
 # Production
 .PHONY: prod
 prod:
-	docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 .PHONY: build-prod
 build-prod:
-	docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
+	docker compose -f docker-compose.yml -f docker-compose.prod.yml build
 
 # Utils
 .PHONY: down
 down:
-	docker-compose down --remove-orphans
+	docker compose down --remove-orphans
 
 .PHONY: logs
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 .PHONY: shell-back
 shell-back:
-	docker-compose exec backend sh
+	docker compose exec backend sh
+
+.PHONY: up-db
+up-db:
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db
 
 # CI
 .PHONY: ci
@@ -59,4 +64,4 @@ ci:
 
 .PHONY: ci-docker
 ci-docker:
-	docker-compose -f docker-compose.ci.yml run --rm ci
+	docker compose -f docker-compose.ci.yml run --rm ci

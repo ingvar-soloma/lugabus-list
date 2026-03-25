@@ -1,6 +1,5 @@
 {
     email {$ADMIN_EMAIL}
-    debug
 }
 
 # А. Сніппет для заголовків безпеки
@@ -56,12 +55,17 @@ np42.dev, www.np42.dev, np42.ingvarsoloma.dev, www.np42.ingvarsoloma.dev, cognit
     # Застосування безпеки
     import security
 
-    # Frontend SPA Logic (Базова версія без перехоплення помилок для сумісності)
+    # Frontend - handle everything else
     handle {
-        reverse_proxy 172.17.0.1:3005
+        reverse_proxy 172.17.0.1:3005 {
+            @404 status 404
+            handle_response @404 {
+                rewrite * /
+                reverse_proxy 172.17.0.1:3005
+            
+            }
+        }
     }
-
-
 }
 
 
