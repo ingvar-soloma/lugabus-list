@@ -14,28 +14,28 @@
 }
 
 
-; {$DOMAIN}, lugabus.org, ingvar-soloma.lugabus.org {
-;     # Backend API - handle /api first
-;     handle /api/* {
-;         reverse_proxy backend:8080
-;     }
-
-;     # Frontend - handle everything else
-;     handle {
-;         reverse_proxy frontend:80
-;     }
-
-;     # Compression
-;     encode gzip zstd
-
-;     # Security headers
-;     header {
-;         Strict-Transport-Security max-age=31536000;
-;         X-Content-Type-Options nosniff
-;         X-Frame-Options DENY
-;         Referrer-Policy no-referrer-when-downgrade
-;     }
-; }
+# {$DOMAIN}, lugabus.org, ingvar-soloma.lugabus.org {
+#     # Backend API - handle /api first
+#     handle /api/* {
+#         reverse_proxy backend:8080
+#     }
+# 
+#     # Frontend - handle everything else
+#     handle {
+#         reverse_proxy frontend:80
+#     }
+# 
+#     # Compression
+#     encode gzip zstd
+# 
+#     # Security headers
+#     header {
+#         Strict-Transport-Security max-age=31536000;
+#         X-Content-Type-Options nosniff
+#         X-Frame-Options DENY
+#         Referrer-Policy no-referrer-when-downgrade
+#     }
+# }
 
 np42.dev, www.np42.dev, np42.ingvarsoloma.dev, www.np42.ingvarsoloma.dev, cognitiveprofile.ingvarsoloma.dev, www.cognitiveprofile.ingvarsoloma.dev {
     # Редірект ВСЬОГО, що не є основним доменом, на головний np42.dev
