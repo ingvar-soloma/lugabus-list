@@ -2,21 +2,8 @@
     email {$ADMIN_EMAIL}
 }
 
-{$DOMAIN}, lugabus.org, ingvar-soloma.lugabus.org {
-    # Backend API - handle /api first
-    handle /api/* {
-        reverse_proxy backend:8080
-    }
-
-    # Frontend - handle everything else
-    handle {
-        reverse_proxy frontend:80
-    }
-
-    # Compression
-    encode gzip zstd
-
-    # Security headers
+# А. Сніппет для заголовків безпеки
+(security) {
     header {
         Strict-Transport-Security max-age=31536000;
         X-Content-Type-Options nosniff
@@ -25,24 +12,66 @@
     }
 }
 
-cognitiveprofile.ingvarsoloma.dev {
+
+; {$DOMAIN}, lugabus.org, ingvar-soloma.lugabus.org {
+;     # Backend API - handle /api first
+;     handle /api/* {
+;         reverse_proxy backend:8080
+;     }
+
+;     # Frontend - handle everything else
+;     handle {
+;         reverse_proxy frontend:80
+;     }
+
+;     # Compression
+;     encode gzip zstd
+
+;     # Security headers
+;     header {
+;         Strict-Transport-Security max-age=31536000;
+;         X-Content-Type-Options nosniff
+;         X-Frame-Options DENY
+;         Referrer-Policy no-referrer-when-downgrade
+;     }
+; }
+
+np42.dev, cognitiveprofile.ingvarsoloma.dev {
+    # Кодування для швидкості
+    encode zstd gzip
+    
     # Backend API - handle /api first
     handle /api/* {
-        reverse_proxy 172.17.0.1:8005
+        reverse_proxy 172.17.0.1:8005 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+        }
     }
 
-    # Frontend - handle everything else
+    # Застосування безпеки
+    import security
+
+    # Frontend SPA Logic
     handle {
         reverse_proxy 172.17.0.1:3005 {
-            @404 status 404
-            handle_response @404 {
-                rewrite * /
-                reverse_proxy 172.17.0.1:3005
-            
+            # Якщо фронтенд повертає 404 (наприклад, при оновленні сторінки /results)
+            # Ми перенаправляємо запит на index, щоб React Router підхопив шлях
+            intercept_errors
+        }
+        
+        handle_errors {
+            # В. Уникаємо "HTML замість картинок"
+            # Робимо fallback на index тільки якщо це НЕ запит до статичного файлу (js, css, png...)
+            @spa_fallback {
+                expression {err.status_code} == 404
+                not path_regexp \.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|json|txt|map)$
             }
+            rewrite @spa_fallback /
+            reverse_proxy @spa_fallback 172.17.0.1:3005
         }
     }
 }
+
 
 # Основний домен — поки що тільки редірект
 ingvarsoloma.dev {
@@ -56,12 +85,8 @@ cv.ingvarsoloma.dev {
     file_server
     encode gzip zstd
     
-    header {
-        Strict-Transport-Security max-age=31536000;
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        Referrer-Policy no-referrer-when-downgrade
-    }
+    import security
+
 
     try_files {path} /index.html
 }

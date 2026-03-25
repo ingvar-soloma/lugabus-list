@@ -3,8 +3,17 @@ name: CI/CD
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'Caddyfile'
+      - '.github/workflows/caddy-deploy.yml'
+      - 'README.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'Caddyfile'
+      - '.github/workflows/caddy-deploy.yml'
+      - 'README.md'
+
 
 jobs:
   test-and-build:
