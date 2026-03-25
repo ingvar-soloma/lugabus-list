@@ -36,10 +36,10 @@
 ;     }
 ; }
 
-np42.dev, www.np42.dev, cognitiveprofile.ingvarsoloma.dev {
-    # Редірект з www на основний домен
-    @www host www.np42.dev
-    redir @www https://np42.dev{uri} permanent
+np42.dev, www.np42.dev, np42.ingvarsoloma.dev, www.np42.ingvarsoloma.dev, cognitiveprofile.ingvarsoloma.dev, www.cognitiveprofile.ingvarsoloma.dev {
+    # Універсальний редірект: прибираємо 'www.' з будь-якого домену
+    @www header_regexp host Host ^www\.(.+)$
+    redir @www https://{re.host.1}{uri} permanent
 
     # Кодування для швидкості
     encode zstd gzip
