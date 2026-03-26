@@ -1,17 +1,16 @@
 {
-    email {$ADMIN_EMAIL}
+	email {$ADMIN_EMAIL}
 }
 
 # А. Сніппет для заголовків безпеки
 (security) {
-    header {
-        Strict-Transport-Security max-age=31536000;
-        X-Content-Type-Options nosniff
-        X-Frame-Options DENY
-        Referrer-Policy no-referrer-when-downgrade
-    }
+	header {
+		Strict-Transport-Security max-age=31536000;
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer-when-downgrade
+	}
 }
-
 
 # {$DOMAIN}, lugabus.org, ingvar-soloma.lugabus.org {
 #     # Backend API - handle /api first
@@ -37,58 +36,54 @@
 # }
 
 np42.dev, www.np42.dev, np42.ingvarsoloma.dev, www.np42.ingvarsoloma.dev, cognitiveprofile.ingvarsoloma.dev, www.cognitiveprofile.ingvarsoloma.dev {
-    # Редірект ВСЬОГО, що не є основним доменом, на головний np42.dev
-    @not_main not host np42.dev
-    redir @not_main https://np42.dev{uri} permanent
+	# Редірект ВСЬОГО, що не є основним доменом, на головний np42.dev
+	@not_main not host np42.dev
+	redir @not_main https://np42.dev{uri} permanent
 
-    # Кодування для швидкості
-    encode zstd gzip
-    
-    # Backend API - handle /api first
-    handle /api/* {
-        reverse_proxy 172.17.0.1:8005 {
-            header_up Host {host}
-            header_up X-Real-IP {remote_host}
-        }
-    }
+	# Кодування для швидкості
+	encode zstd gzip
 
-    # Застосування безпеки
-    import security
+	# Backend API - handle /api first
+	handle /api/* {
+		reverse_proxy 172.17.0.1:8005 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+		}
+	}
 
-    # Frontend - handle everything else
-    handle {
-        reverse_proxy 172.17.0.1:3005 {
-            @404 status 404
-            handle_response @404 {
-                rewrite * /
-                reverse_proxy 172.17.0.1:3005
-            
-            }
-        }
-    }
+	# Застосування безпеки
+	import security
+
+	# Frontend - handle everything else
+	handle {
+		reverse_proxy 172.17.0.1:3005 {
+			@404 status 404
+			handle_response @404 {
+				rewrite * /
+				reverse_proxy 172.17.0.1:3005
+			}
+		}
+	}
 }
-
 
 # Основний домен — поки що тільки редірект
 ingvarsoloma.dev {
-    root * /opt/professional-blog
-    file_server
-    encode gzip zstd
-    
-    import security
+	root * /opt/professional-blog
+	file_server
+	encode gzip zstd
 
+	import security
 
-    try_files {path} /index.html
+	try_files {path} /index.html
 }
 
 # Ваш поточний сайт на піддомені
 cv.ingvarsoloma.dev {
-    root * /var/www/cv-portfolio
-    file_server
-    encode gzip zstd
-    
-    import security
+	root * /var/www/cv-portfolio
+	file_server
+	encode gzip zstd
 
+	import security
 
-    try_files {path} /index.html
+	try_files {path} /index.html
 }

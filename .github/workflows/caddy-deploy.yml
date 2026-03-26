@@ -24,5 +24,6 @@ jobs:
             # Оновлюємо лише контейнер Caddy (без запуску залежностей, оскільки проект на холді)
             docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps caddy
             
-            # М'яке перезавантаження конфігурації
+            # Форматування Caddyfile та м'яке перезавантаження конфігурації
+            docker compose exec -T caddy caddy fmt --overwrite /etc/caddy/Caddyfile
             docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile
